@@ -16,8 +16,8 @@ The primary goals of the project can be summed up as follows:
 - Work alongside the Bitcoin Design community to develop an aesthetic GUI
 - Develop a mobile-optimized GUI
 
-It is important that we stay as conflict-free as possible with the Core repo.
-As such, this project will aim to make very few changes outside of the `qml` directory.
+It is important that we stay as conflict-free as possible with the Bitcoin Core repo.
+As such, this project will aim to make very few changes outside of the qml directory.
 Pull requests must be focused on developing the GUI itself, adding build support,
 or improving relevant documentation.
 
@@ -25,29 +25,29 @@ Note that this project will **not** accept pull requests making any significant 
 
 # Development Process
 
-This repo is synced with the [Core repo](https://github.com/bitcoin/bitcoin) on a weekly basis, or as needed to resolve conflicts.
+This repo is synced with the [Bitcoin Core repo](https://github.com/bitcoin/bitcoin) on a weekly basis, or as needed to resolve conflicts.
 
 Contributions are welcome from all, developers and designers. If you are a new contributor, please read [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 # Compile and Run
 
-The `master` branch is only guaranteed to work and build on `Debian-based` systems and `macOS`.
+The master branch is only guaranteed to work and build on Debian-based systems and macOS.
 Support for more systems will be confirmed and documented as the project matures.
 
 ### Dependencies
-Aside from the dependencies listed in [build-unix.md](../../doc/build-unix.md), `Debian` based systems require the following additional dependencies:
+Aside from the dependencies listed in [build-unix.md](../../doc/build-unix.md), Debian based systems require the following additional dependencies:
 
 ```
 sudo apt install qtdeclarative5-dev qtquickcontrols2-5-dev
 ```
 
-No additional dependencies, besides those in [build-osx.md](../../doc/build-osx.md), are needed for `macOS`.
+No additional dependencies, besides those in [build-osx.md](../../doc/build-osx.md), are needed for macOS.
 
 ### Build
 
 For instructions on how to build and compile Bitcoin Core, refer to your respective systems build docs.
 
-To add support for building the `qml` GUI,
+To add support for building the qml GUI,
 you must configure with the following option:
 
 ```
