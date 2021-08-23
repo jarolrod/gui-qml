@@ -41,10 +41,16 @@ The master branch is only guaranteed to work and build on Debian-based systems a
 Support for more systems will be confirmed and documented as the project matures.
 
 ### Dependencies
-Aside from the dependencies listed in [build-unix.md](../../doc/build-unix.md), Debian based systems require the following additional dependencies:
+Aside from the dependencies listed in [build-unix.md](../../doc/build-unix.md), Debian based systems require the following additional dependencies to compile:
 
 ```
 sudo apt install qtdeclarative5-dev qtquickcontrols2-5-dev
+```
+
+The following runtime dependencies are also needed:
+
+```
+sudo apt install qml-module-qtquick2 qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-dialogs qml-module-qtquick-window2
 ```
 
 No additional dependencies, besides those in [build-osx.md](../../doc/build-osx.md), are needed for macOS.
