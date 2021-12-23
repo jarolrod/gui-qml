@@ -79,8 +79,9 @@ sudo dnf install qt5-qtdeclarative-devel qt5-qtquickcontrols2-devel
 
 For instructions on how to build and compile Bitcoin Core, refer to your respective systems build docs.
 
-To add support for building the qml GUI,
-you must configure with the following option:
+As long as the required dependencies are installed, the qml gui will be built.
+To ensure that you are in fact building the qml GUI,
+you can configure with the following option:
 
 ```
 ./configure --with-qml
