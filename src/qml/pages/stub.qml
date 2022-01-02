@@ -44,5 +44,8 @@ ApplicationWindow {
             Layout.preferredWidth: 400
             focus: true
         }
+        ContinueButton {
+            text: "Continue"
+        }
     }
 }
