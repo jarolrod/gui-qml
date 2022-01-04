@@ -52,9 +52,21 @@ ApplicationWindow {
                 onClicked: indicator.progress = mouseX / width
             }
         }
-        ConnectionOptions {
-            Layout.preferredWidth: 400
-            focus: true
+        StackLayout {
+            id: stack
+            Layout.fillWidth: true
+            ConnectionOptions {}
+            ConnectionSettings {}
+        }
+        ContinueButton {
+            Layout.alignment: Qt.AlignCenter
+            text: stack.currentIndex < 1 ? qsTr("Continue") : qsTr("Back")
+            onClicked: stack.currentIndex < 1 ? stack.currentIndex = 1 : stack.currentIndex = 0
+        }
+        PageIndicator {
+            Layout.alignment: Qt.AlignCenter
+            count: stack.count
+            currentIndex: stack.currentIndex
         }
     }
 }
