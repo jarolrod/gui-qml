@@ -53,5 +53,9 @@ ApplicationWindow {
             Layout.preferredWidth: 400
             focus: true
         }
+        PageIndicator {
+            count: 5
+            currentIndex: 1
+        }
     }
 }
