@@ -22,6 +22,11 @@ ApplicationWindow {
         anchors.centerIn: parent
         spacing: 15
         width: 400
+        ThemeToggleButton {
+            width: 50
+            height: 50
+            Layout.alignment: Qt.AlignRight
+        }
         Image {
             Layout.alignment: Qt.AlignCenter
             source: "image://images/app"
@@ -49,9 +54,20 @@ ApplicationWindow {
             Layout.fillWidth: true
             progress: nodeModel.verificationProgress
         }
-        ConnectionOptions {
-            Layout.preferredWidth: 400
-            focus: true
+        StackLayout {
+            id: stack
+            ConnectionOptions {
+                Layout.preferredWidth: 400
+                focus: true
+            }
+            ConnectionSettings {
+                Layout.preferredWidth: 400
+            }
+        }
+        ContinueButton {
+            Layout.alignment: Qt.AlignCenter
+            text: stack.currentIndex < 1 ? qsTr("Start") : qsTr("Back")
+            onClicked: stack.currentIndex < 1 ? stack.currentIndex = 1 : stack.currentIndex = 0
         }
     }
 }
