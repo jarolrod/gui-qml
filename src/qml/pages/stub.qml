@@ -28,6 +28,13 @@ ApplicationWindow {
             sourceSize.width: 64
             sourceSize.height: 64
         }
+        Button {
+            icon.color: "white"
+            icon.source: "image://images/caret-left"
+            icon.height: 40
+            icon.width: 40
+            background: null
+        }
         Header {
             Layout.fillWidth: true
             bold: true
