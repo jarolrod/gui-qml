@@ -43,22 +43,14 @@ ColumnLayout {
             descriptionSize: 15
             descriptionMargin: 10
             wrap: false
-            }
-        Loader {
-            Layout.fillWidth: true
-            Layout.preferredWidth: 0
-            Layout.alignment: Qt.AlignRight
-            Layout.rightMargin: 5
-            active: true
-            visible: active
-            sourceComponent: TextButton {
-                text: ">"
-                bold: false
-                rightalign: true
-                onClicked: {
-                    introductions.incrementCurrentIndex()
-                    swipeView.inSubPage = true
-                }
+        }
+        TextButton {
+            text: ">"
+            bold: false
+            rightalign: true
+            onClicked: {
+                introductions.incrementCurrentIndex()
+                swipeView.inSubPage = true
             }
         }
     }
