@@ -12,9 +12,10 @@ ColumnLayout {
     Information {
         Layout.fillWidth: true
         header: qsTr("Developer documentation")
-        hasIcon: true
-        iconSource: "qrc:/icons/export"
-        link: "https://bitcoin.org/en/bitcoin-core/contribute/documentation"
+        actionItem: ExternalLink {
+          iconSource: "qrc:/icons/export"
+          link: "https://bitcoin.org/en/bitcoin-core/contribute/documentation"
+        }
     }
     Setting {
         Layout.fillWidth: true
@@ -35,6 +36,7 @@ ColumnLayout {
     Setting {
         Layout.fillWidth: true
         header: qsTr("Other option...")
+
         description: qsTr("Description...")
     }
 }
