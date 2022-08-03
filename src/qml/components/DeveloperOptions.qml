@@ -9,7 +9,7 @@ import "../controls"
 
 ColumnLayout {
     spacing: 20
-    Information {
+    Setting {
         Layout.fillWidth: true
         header: qsTr("Developer documentation")
         actionItem: ExternalLink {
