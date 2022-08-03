@@ -13,45 +13,63 @@ ColumnLayout {
         Layout.fillWidth: true
         header: qsTr("Website")
         actionItem: ExternalLink {
-            description: qsTr("bitcoincore.org >")
+            description: qsTr("bitcoincore.org")
             link: "https://bitcoincore.org"
+            iconSource: "qrc:/icons/caret-right"
+            iconWidth: 18
+            iconHeight: 18
         }
     }
     Setting {
         Layout.fillWidth: true
         header: qsTr("Source code")
         actionItem: ExternalLink {
-            description: qsTr("github.com/bitcoin/bitcoin >")
+            description: qsTr("github.com/bitcoin/bitcoin")
             link: "https://github.com/bitcoin/bitcoin"
+            iconSource: "qrc:/icons/caret-right"
+            iconWidth: 18
+            iconHeight: 18
         }
     }
     Setting {
         Layout.fillWidth: true
         header: qsTr("License")
         actionItem: ExternalLink {
-            description: qsTr("MIT >")
+            description: qsTr("MIT")
             link: "https://opensource.org/licenses/MIT"
+            iconSource: "qrc:/icons/caret-right"
+            iconWidth: 18
+            iconHeight: 18
         }
     }
     Setting {
         Layout.fillWidth: true
         header: qsTr("Version")
         actionItem: ExternalLink {
-            description: qsTr("v22.99.0-1e7564eca8a6 >")
+            description: qsTr("v22.99.0-1e7564eca8a6")
             link: "https://bitcoin.org/en/download"
+            iconSource: "qrc:/icons/caret-right"
+            iconWidth: 18
+            iconHeight: 18
         }
     }
     Setting {
         Layout.fillWidth: true
         header: qsTr("Developer options")
         description: qsTr("Only use these if you have development experience")
-        actionItem: TextButton {
-            text: ">"
-            bold: false
-            rightalign: true
-            onClicked: {
-                introductions.incrementCurrentIndex()
-                swipeView.inSubPage = true
+        actionItem: Image {
+            height: 18
+            width: 18
+            horizontalAlignment: Image.AlignRight
+            source: "qrc:/icons/caret-right"
+            fillMode: Image.PreserveAspectFit
+            mipmap: true
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    introductions.incrementCurrentIndex()
+                    swipeView.inSubPage = true
+                }
             }
         }
     }
