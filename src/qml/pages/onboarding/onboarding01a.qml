@@ -31,7 +31,7 @@ Page {
                 }
                 Image {
                     id: icon
-                    source: "qrc:/icons/info"
+                    source: "qrc:/icons/arrow-down"
                     width: parent.width
                     height: parent.height
                     anchors.centerIn: parent
