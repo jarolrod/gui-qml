@@ -11,6 +11,7 @@
 #include <memory>
 
 #include <QObject>
+#include <QString>
 
 QT_BEGIN_NAMESPACE
 class QTimerEvent;
@@ -26,16 +27,17 @@ class NodeModel : public QObject
     Q_OBJECT
     Q_PROPERTY(int blockTipHeight READ blockTipHeight NOTIFY blockTipHeightChanged)
     Q_PROPERTY(double verificationProgress READ verificationProgress NOTIFY verificationProgressChanged)
-
 public:
     explicit NodeModel(interfaces::Node& node);
 
     int blockTipHeight() const { return m_block_tip_height; }
     void setBlockTipHeight(int new_height);
     double verificationProgress() const { return m_verification_progress; }
+    void setNetworkName(QString network_name);
     void setVerificationProgress(double new_progress);
 
     Q_INVOKABLE void startNodeInitializionThread();
+    Q_INVOKABLE QString networkName() const { return m_network_name; }
 
     void startShutdownPolling();
     void stopShutdownPolling();
@@ -60,6 +62,7 @@ private:
     int m_shutdown_polling_timer_id{0};
 
     interfaces::Node& m_node;
+    QString m_network_name;
     std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
 
     void ConnectToBlockTipSignal();

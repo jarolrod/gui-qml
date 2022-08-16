@@ -181,6 +181,7 @@ int QmlGuiMain(int argc, char* argv[])
     QScopedPointer<const NetworkStyle> network_style{NetworkStyle::instantiate(Params().NetworkIDString())};
     assert(!network_style.isNull());
     engine.addImageProvider(QStringLiteral("images"), new ImageProvider{network_style.data()});
+    node_model.setNetworkName(QString::fromStdString(Params().NetworkIDString()));
 
     engine.rootContext()->setContextProperty("nodeModel", &node_model);
 

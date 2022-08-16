@@ -45,6 +45,9 @@ ApplicationWindow {
                 spacing: 0
                 anchors.centerIn: parent
                 Component.onCompleted: nodeModel.startNodeInitializionThread();
+                NetworkHint {
+                    //text: nodeModel.networkName()
+                }
                 Image {
                     Layout.alignment: Qt.AlignCenter
                     source: "image://images/app"
@@ -60,6 +63,7 @@ ApplicationWindow {
                     Layout.alignment: Qt.AlignCenter
                     progress: nodeModel.verificationProgress
                 }
+
             }
          }
     }

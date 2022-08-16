@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <string>
 
 #include <QTimerEvent>
 
@@ -32,6 +33,11 @@ void NodeModel::setVerificationProgress(double new_progress)
         m_verification_progress = new_progress;
         Q_EMIT verificationProgressChanged();
     }
+}
+
+void NodeModel::setNetworkName(QString network_name)
+{
+    m_network_name = network_name;
 }
 
 void NodeModel::startNodeInitializionThread()
