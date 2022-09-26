@@ -45,20 +45,35 @@ ApplicationWindow {
                 spacing: 0
                 anchors.centerIn: parent
                 Component.onCompleted: nodeModel.startNodeInitializionThread();
-                Image {
+                CircularProgressBar {
                     Layout.alignment: Qt.AlignCenter
-                    source: "image://images/app"
-                    sourceSize.width: 64
-                    sourceSize.height: 64
-                }
-                BlockCounter {
-                    Layout.alignment: Qt.AlignCenter
-                    blockHeight: nodeModel.blockTipHeight
-                }
-                ProgressIndicator {
-                    width: 200
-                    Layout.alignment: Qt.AlignCenter
-                    progress: nodeModel.verificationProgress
+                    value: nodeModel.verificationProgress
+                    content: ColumnLayout {
+                        width: 200
+                        spacing: 10
+                        Button {
+                            id: icon_button
+                            padding: 0
+                            display: AbstractButton.IconOnly
+                            height: 40
+                            width: 40
+                            icon.source: "image://images/bitcoin-circle"
+                            icon.color: Theme.color.neutral9
+                            icon.height: 40
+                            icon.width: 40
+                            background: null
+                            Layout.alignment: Qt.AlignCenter
+                            Layout.topMargin: 30
+                        }
+                        Header {
+                            bold: true
+                            headerSize: 24
+                            header: qsTr("Downloading")
+                            description: qsTr("12 min left")
+                            Layout.alignment: Qt.AlignCenter
+                            Layout.topMargin: 5
+                        }
+                    }
                 }
             }
          }
