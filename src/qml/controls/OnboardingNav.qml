@@ -8,19 +8,36 @@ import QtQuick.Layouts 1.15
 
 Control {
     id: root
-    property alias navButton: button_loader.sourceComponent
+    property alias rightButton: right_button.sourceComponent
+    property alias leftButton: left_button.sourceComponent
+    property alias middleElement: middle_detail.sourceComponent
     property bool alignLeft: true
     height: 46
     contentItem: RowLayout {
         spacing: 0
         Layout.fillWidth: true
         Loader {
-            id: button_loader
+            id: left_button
             Layout.rightMargin: 10
-            Layout.alignment: root.alignLeft ? Qt.AlignLeft : Qt.AlignRight
+            Layout.alignment: Qt.AlignLeft
             active: true
             visible: active
-            sourceComponent: root.navButton
+            sourceComponent: root.rightButton
+        }
+        Loader {
+            id: middle_detail
+            Layout.alignment: Qt.AlignHCenter
+            active: true
+            visible: active
+            sourceComponent: root.middleElement
+        }
+        Loader {
+            id: right_button
+            Layout.rightMargin: 10
+            Layout.alignment: Qt.AlignRight
+            active: true
+            visible: active
+            sourceComponent: root.rightButton
         }
     }
 }

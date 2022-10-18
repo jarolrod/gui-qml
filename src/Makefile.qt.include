@@ -322,6 +322,7 @@ QML_RES_QML = \
   qml/components/ConnectionOptions.qml \
   qml/components/ConnectionSettings.qml \
   qml/components/DeveloperOptions.qml \
+  qml/components/NetworkIndicator.qml \
   qml/components/StorageLocations.qml \
   qml/components/StorageOptions.qml \
   qml/components/StorageSettings.qml \
@@ -344,6 +345,7 @@ QML_RES_QML = \
   qml/controls/Wizard.qml \
   qml/pages/initerrormessage.qml \
   qml/pages/main.qml \
+  qml/pages/node.qml \
   qml/pages/onboarding/onboarding01.qml \
   qml/pages/onboarding/onboarding01a.qml \
   qml/pages/onboarding/onboarding01b.qml \

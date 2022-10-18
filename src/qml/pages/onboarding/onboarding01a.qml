@@ -9,14 +9,17 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../../controls"
+import "../../components"
 
 Page {
     background: null
     clip: true
     Layout.fillWidth: true
     header: OnboardingNav {
-        alignLeft: false
-        navButton: NavButton {
+        middleElement: NetworkIndicator {
+            text: "Test network"
+        }
+        rightButton: NavButton {
             iconSource: "image://images/info"
             iconHeight: 24
             onClicked: {

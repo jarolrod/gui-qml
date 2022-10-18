@@ -13,7 +13,7 @@ Page {
     clip: true
     Layout.fillWidth: true
     header: OnboardingNav {
-        navButton: NavButton {
+        leftButton: NavButton {
             iconSource: "image://images/caret-left"
             text: "Back"
             onClicked: {

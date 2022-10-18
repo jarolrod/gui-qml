@@ -33,34 +33,6 @@ ApplicationWindow {
             "onboarding/onboarding05.qml",
             "onboarding/onboarding06.qml",
         ]
-        onFinishedChanged: main.push(node)
-    }
-    Component {
-        id: node
-        Page {
-            anchors.fill: parent
-            background: null
-            ColumnLayout {
-                width: 600
-                spacing: 0
-                anchors.centerIn: parent
-                Component.onCompleted: nodeModel.startNodeInitializionThread();
-                Image {
-                    Layout.alignment: Qt.AlignCenter
-                    source: "image://images/app"
-                    sourceSize.width: 64
-                    sourceSize.height: 64
-                }
-                BlockCounter {
-                    Layout.alignment: Qt.AlignCenter
-                    blockHeight: nodeModel.blockTipHeight
-                }
-                ProgressIndicator {
-                    width: 200
-                    Layout.alignment: Qt.AlignCenter
-                    progress: nodeModel.verificationProgress
-                }
-            }
-         }
+        onFinishedChanged: main.push("node.qml")
     }
 }
