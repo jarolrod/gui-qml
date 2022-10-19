@@ -16,10 +16,6 @@ Page {
     clip: true
     Layout.fillWidth: true
     header: NavigationBar {
-        middleDetail: Button {
-          width: 100
-          height: 20
-        }
         rightDetail: NavButton {
             iconSource: "image://images/info"
             iconHeight: 24

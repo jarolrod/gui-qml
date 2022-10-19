@@ -6,44 +6,47 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-Control {
+RowLayout {
     id: root
     property alias leftDetail: left_detail.sourceComponent
     property alias middleDetail: middle_detail.sourceComponent
     property alias rightDetail: right_detail.sourceComponent
-    property int holderWidth: 40
-    property int holderHeight: 46
     height: 46
 
-    contentItem: RowLayout {
-        spacing: 0
+    spacing: 0
+    Layout.fillWidth: true
+    RowLayout {
+        id: left_item
+        Layout.preferredWidth: parent.width / 3
         Loader {
+            Layout.alignment: Qt.AlignLeft
             id: left_detail
             active: true
             visible: active
-            sourceComponent: root.leftDetail ?? createPlaceHolder()
-        }
-        Loader {
-            id: middle_detail
-            Layout.fillWidth: true
-            active: true
-            visible: active
-            sourceComponent: root.middleDetail ?? createPlaceHolder()
-        }
-        Loader {
-            id: right_detail
-            active: true
-            visible: active
-            sourceComponent: root.rightDetail ?? createPlaceHolder()
+            sourceComponent: root.leftDetail
         }
     }
-
-    function createPlaceHolder() {
-        const placeHolder = Qt.createQMLObject('Rectangle {
-        color: "red"
-        width: 20
-        height: 20
-    }');
-        return placeHolder;
+    RowLayout {
+        id: middle_item
+        Layout.preferredWidth: parent.width / 3
+        Loader {
+            Layout.alignment: Qt.AlignHCenter
+            id: middle_detail
+            active: true
+            visible: active
+            sourceComponent: root.middleDetail
+        }
+    }
+    RowLayout {
+        id: right_item
+        Layout.preferredWidth: parent.width / 3
+        Loader {
+            id: right_detail
+            Layout.rightMargin: 10
+            Layout.alignment: Qt.AlignRight
+            active: true
+            visible: active
+            sourceComponent: root.rightDetail
+        }
     }
 }

@@ -33,6 +33,22 @@ ApplicationWindow {
             "onboarding/onboarding05.qml",
             "onboarding/onboarding06.qml",
         ]
-        onFinishedChanged: main.push("node.qml")
+        onFinishedChanged: main.push(node)
+    }
+
+    Component {
+        id: node
+        SwipeView {
+            id: nodeViews
+            anchors.fill: parent
+            interactive: false
+            orientation: Qt.Horizontal
+            Loader {
+                source: "node.qml"
+            }
+            Loader {
+                source: "settings/settings01.qml"
+            }
+        }
     }
 }

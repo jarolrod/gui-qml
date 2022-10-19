@@ -358,7 +358,8 @@ QML_RES_QML = \
   qml/pages/onboarding/onboarding05b.qml \
   qml/pages/onboarding/onboarding06.qml \
   qml/pages/onboarding/onboarding06a.qml \
-  qml/pages/onboarding/onboarding06b.qml
+  qml/pages/onboarding/onboarding06b.qml \
+  qml/pages/settings/settings01.qml
 
 BITCOIN_QT_CPP = $(BITCOIN_QT_BASE_CPP)
 if TARGET_WINDOWS

@@ -42,6 +42,7 @@
         <file>pages/onboarding/onboarding06.qml</file>
         <file>pages/onboarding/onboarding06a.qml</file>
         <file>pages/onboarding/onboarding06b.qml</file>
+        <file>pages/settings/settings01.qml</file>
     </qresource>
     <qresource prefix="/icons">
         <file alias="arrow-down">res/icons/arrow-down.png</file>
