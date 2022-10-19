@@ -12,8 +12,8 @@ Page {
     background: null
     Layout.fillWidth: true
     clip: true
-    header: OnboardingNav {
-        rightButton: NavButton {
+    header: NavigationBar {
+        rightDetail: NavButton {
             text: "Done"
             onClicked: {
                 connections.decrementCurrentIndex()

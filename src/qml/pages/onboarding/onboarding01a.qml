@@ -15,11 +15,12 @@ Page {
     background: null
     clip: true
     Layout.fillWidth: true
-    header: OnboardingNav {
-        middleElement: NetworkIndicator {
-            text: "Test network"
+    header: NavigationBar {
+        middleDetail: Button {
+          width: 100
+          height: 20
         }
-        rightButton: NavButton {
+        rightDetail: NavButton {
             iconSource: "image://images/info"
             iconHeight: 24
             onClicked: {
