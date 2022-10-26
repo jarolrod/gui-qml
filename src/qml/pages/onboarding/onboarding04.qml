@@ -36,6 +36,7 @@ Page {
             descriptionMargin: 20
         }
         StorageLocations {
+        banner: false
             Layout.maximumWidth: 450
             Layout.topMargin: 30
             Layout.leftMargin: 20
