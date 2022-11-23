@@ -21,23 +21,15 @@ Page {
             }
         }
     }
-    ColumnLayout {
-        width: Math.min(parent.width, 490)
-        spacing: 0
-        anchors.top: parent.top
+    OnboardingInfo {
+        height: parent.height
+        width: Math.min(parent.width, 600)
         anchors.horizontalCenter: parent.horizontalCenter
-        Header {
-            Layout.fillWidth: true
-            Layout.leftMargin: 20
-            Layout.rightMargin: 20
-            bold: true
-            header: "Storage settings"
-        }
-        StorageSettings {
-            Layout.fillWidth: true
-            Layout.topMargin: 30
-            Layout.leftMargin: 20
-            Layout.rightMargin: 20
-        }
+        bannerActive: false
+        bold: true
+        header: "Storage settings"
+        headerMargin: 0
+        detailActive: true
+        detailItem: StorageSettings {}
     }
 }
