@@ -12,6 +12,7 @@ Control {
     required property string header
     property alias actionItem: action_loader.sourceComponent
     property string description
+    implicitWidth: 450
     contentItem: ColumnLayout {
         spacing: 20
         width: parent.width
