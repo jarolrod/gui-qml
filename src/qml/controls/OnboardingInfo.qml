@@ -28,8 +28,6 @@ Item {
     property int subtextMargin: 30
     property int subtextSize: 15
 
-    implicitWidth: 600
-
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
         width: parent.width

@@ -33,6 +33,9 @@ Page {
         detailActive: true
         detailItem: StorageLocations {
             Layout.maximumWidth: 450
+            Layout.alignment: Qt.AlignCenter
+            Layout.leftMargin: 20
+            Layout.rightMargin: 20
         }
         buttonText: qsTr("Next")
     }

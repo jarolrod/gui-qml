@@ -24,7 +24,6 @@ Page {
     OnboardingInfo {
         height: parent.height
         width: Math.min(parent.width, 600)
-        anchors.horizontalCenter: parent.horizontalCenter
         bannerActive: false
         bold: true
         header: "Connection settings"
