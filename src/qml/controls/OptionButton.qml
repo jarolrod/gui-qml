@@ -9,10 +9,10 @@ import QtQuick.Layouts 1.15
 Button {
     property string description
     property bool recommended: false
+    property bool choice: false
     id: button
     padding: 15
     checkable: true
-    property alias detail: detail_loader.sourceComponent
     implicitWidth: 450
     background: Rectangle {
         border.width: 1
@@ -66,8 +66,20 @@ Button {
             }
         }
         Loader {
-            id: detail_loader
-            visible: item
+            visible: checked
+            enabled: choice
+            sourceComponent: Button {
+                padding: 0
+                display: AbstractButton.IconOnly
+                height: 20
+                width: 20
+                icon.source: "image://images/check"
+                icon.color: Theme.color.neutral9
+                icon.height: 20
+                icon.width: 20
+                background: null
+                onClicked: root.clicked()
+            }
         }
     }
 }
