@@ -40,6 +40,7 @@ ColumnLayout {
             icon.height: 18
             icon.width: 18
             background: null
+            onClicked: connectionSwipe.incrementCurrentIndex()
         }
     }
 }
