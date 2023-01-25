@@ -5,6 +5,7 @@
         <file>components/ConnectionOptions.qml</file>
         <file>components/ConnectionSettings.qml</file>
         <file>components/DeveloperOptions.qml</file>
+        <file>components/ProxySettings.qml</file>
         <file>components/StorageLocations.qml</file>
         <file>components/StorageOptions.qml</file>
         <file>components/StorageSettings.qml</file>
@@ -37,6 +38,7 @@
         <file>pages/settings/SettingsAbout.qml</file>
         <file>pages/settings/SettingsConnection.qml</file>
         <file>pages/settings/SettingsDeveloper.qml</file>
+        <file>pages/settings/SettingsProxy.qml</file>
         <file>pages/settings/SettingsStorage.qml</file>
     </qresource>
     <qresource prefix="/icons">

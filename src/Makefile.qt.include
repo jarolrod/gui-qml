@@ -326,6 +326,7 @@ QML_RES_QML = \
   qml/components/ConnectionOptions.qml \
   qml/components/ConnectionSettings.qml \
   qml/components/DeveloperOptions.qml \
+  qml/components/ProxySettings.qml \
   qml/components/StorageLocations.qml \
   qml/components/StorageOptions.qml \
   qml/components/StorageSettings.qml \
@@ -358,6 +359,7 @@ QML_RES_QML = \
   qml/pages/settings/SettingsAbout.qml \
   qml/pages/settings/SettingsConnection.qml \
   qml/pages/settings/SettingsDeveloper.qml \
+  qml/pages/settings/SettingsProxy.qml \
   qml/pages/settings/SettingsStorage.qml
 
 BITCOIN_QT_CPP = $(BITCOIN_QT_BASE_CPP)
