@@ -317,6 +317,7 @@ QML_RES_ICONS = \
   qml/res/icons/check.png \
   qml/res/icons/cross.png \
   qml/res/icons/export.png \
+  qml/res/icons/export-outline.png \
   qml/res/icons/gear.png \
   qml/res/icons/info.png \
   qml/res/icons/network-dark.png \

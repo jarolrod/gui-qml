@@ -77,6 +77,11 @@ QPixmap ImageProvider::requestPixmap(const QString& id, QSize* size, const QSize
         return QIcon(":/icons/export").pixmap(requested_size);
     }
 
+    if (id == "export-outline") {
+        *size = requested_size;
+        return QIcon(":/icons/export-outline").pixmap(requested_size);
+    }
+
     if (id == "gear") {
         *size = requested_size;
         return QIcon(":/icons/gear").pixmap(requested_size);
