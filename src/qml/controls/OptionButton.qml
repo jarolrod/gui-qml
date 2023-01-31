@@ -33,6 +33,8 @@ Button {
         spacing: 3
         ColumnLayout {
             spacing: 3
+            Layout.preferredWidth: parent.width * 0.9
+            Layout.rightMargin: 15
             Header {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 0
@@ -64,11 +66,12 @@ Button {
                 }
             }
         }
-        Loader {
-            id: detail_loader
-            visible: button.checked
-            active: true
-            sourceComponent: Button {
+        Item {
+            Layout.preferredWidth: parent.width * 0.1
+            height: parent.height
+            Button {
+                anchors.centerIn: parent
+                visible: button.checked
                 icon.source: "image://images/check"
                 icon.color: Theme.color.neutral9
                 icon.height: 24
