@@ -11,9 +11,9 @@ Control {
     required property string link
     property string description: ""
     property int descriptionSize: 18
-    property url iconSource: ""
-    property int iconWidth: 18
-    property int iconHeight: 18
+    property url iconSource: "image://images/export-outline"
+    property int iconWidth: 22
+    property int iconHeight: 22
 
     contentItem: RowLayout {
         spacing: 0
@@ -27,23 +27,18 @@ Control {
                 font.styleName: "Regular"
                 font.pixelSize: root.descriptionSize
                 color: Theme.color.neutral7
-                textFormat: Text.RichText
-                text: "<style>a:link { color: " + Theme.color.neutral7 + "; text-decoration: none;}</style>" + "<a href=\"" + link + "\">" + root.description + "</a>"
+                text: root.description
                 onLinkActivated: Qt.openUrlExternally(link)
             }
         }
-        Loader {
-            Layout.fillWidth: true
-            active: root.iconSource.toString().length > 0
-            visible: active
-            sourceComponent: Button {
-                icon.source: root.iconSource
-                icon.color: Theme.color.neutral9
-                icon.height: root.iconHeight
-                icon.width: root.iconWidth
-                background: null
-                onClicked: Qt.openUrlExternally(link)
-            }
+        Button {
+            leftPadding: 0
+            icon.source: root.iconSource
+            icon.color: Theme.color.neutral9
+            icon.height: root.iconHeight
+            icon.width: root.iconWidth
+            background: null
+            onClicked: Qt.openUrlExternally(link)
         }
     }
 }
