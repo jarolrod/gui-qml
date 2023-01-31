@@ -14,22 +14,61 @@ ColumnLayout {
     property string description
 
     spacing: 20
-    RowLayout {
-        Header {
-            Layout.fillWidth: true
-            center: false
-            header: root.header
-            headerSize: 18
-            description: root.description
-            descriptionSize: 15
-            descriptionMargin: 0
+    Item {
+        id: settingContent
+        Layout.fillWidth: true
+        state: "FILLED"
+
+        states: [
+            State {
+                name: "FILLED"
+                PropertyChanges { target: settingText; headerColor: Theme.color.neutral9 }
+            },
+            State {
+                name: "HOVER"
+                PropertyChanges { target: settingText; headerColor: Theme.color.orange }
+            },
+            State {
+                name: "PRESSED"
+                PropertyChanges { target: settingText; headerColor: Theme.color.orangeLight2 }
+            }
+        ]
+
+        RowLayout {
+            Header {
+                id: settingText
+                Layout.fillWidth: true
+                center: false
+                header: root.header
+                headerSize: 18
+                description: root.description
+                descriptionSize: 15
+                descriptionMargin: 0
+            }
+            Loader {
+                id: action_loader
+                active: true
+                visible: active
+                sourceComponent: root.actionItem
+            }
         }
-        Loader {
-            id: action_loader
-            active: true
-            visible: active
-            sourceComponent: root.actionItem
-        }
+        // MouseArea {
+        //     anchors.fill: parent
+        //     hoverEnabled: true
+        //     onEntered: {
+        //         settingContent.state = "HOVER"
+        //     }
+        //     onExited: {
+        //         settingContent.state = "FILLED"
+        //     }
+        //     onPressed: {
+        //         settingContent.state = "PRESSED"
+        //     }
+        //     onReleased: {
+        //         settingContent.state = "FILLED"
+        //         settingContent.clicked()
+        //     }
+        // }
     }
     Loader {
         Layout.fillWidth: true
