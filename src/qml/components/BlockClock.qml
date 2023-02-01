@@ -14,13 +14,13 @@ Item {
     id: root
 
     Layout.alignment: Qt.AlignCenter
-    implicitWidth: 200
-    implicitHeight: 200
+    implicitWidth: 600
+    implicitHeight: 600
 
     property alias header: mainText.text
     property alias headerSize: mainText.font.pixelSize
     property alias subText: subText.text
-    property int headerSize: 32
+    property int headerSize: 96
     property bool synced: nodeModel.verificationProgress > 0.999
     property bool paused: false
     property bool conns: true
@@ -41,8 +41,10 @@ Item {
         background: null
         icon.source: "image://images/bitcoin-circle"
         icon.color: Theme.color.neutral9
-        icon.width: 40
-        icon.height: 40
+        icon.width: 120
+        icon.height: 120
+        width: 120
+        height: 120
         anchors.bottom: mainText.top
         anchors.horizontalCenter: root.horizontalCenter
     }
@@ -52,7 +54,7 @@ Item {
         anchors.centerIn: parent
         font.family: "Inter"
         font.styleName: "Semi Bold"
-        font.pixelSize: 32
+        font.pixelSize: 96
         color: Theme.color.neutral9
     }
 
@@ -62,20 +64,20 @@ Item {
         anchors.horizontalCenter: root.horizontalCenter
         font.family: "Inter"
         font.styleName: "Semi Bold"
-        font.pixelSize: 18
+        font.pixelSize: 54
         color: Theme.color.neutral4
     }
 
     RowLayout {
         id: peersIndicator
         anchors.top: subText.bottom
-        anchors.topMargin: 20
+        anchors.topMargin: 60
         anchors.horizontalCenter: root.horizontalCenter
         spacing: 5
         Repeater {
             model: 5
             Rectangle {
-                width: 3
+                width: 9
                 height: width
                 radius: width/2
                 color: Theme.color.neutral9
