@@ -18,7 +18,15 @@ Page {
 
     Component.onCompleted: nodeModel.startNodeInitializionThread();
 
-    BlockClock {
+    ColumnLayout {
+        spacing: 30
         anchors.centerIn: parent
+        BlockClock {
+          id: blockClock
+          Layout.alignment: Qt.AlignCenter
+        }
+        NetworkIndicator {
+            Layout.alignment: Qt.AlignCenter
+        }
     }
 }
