@@ -15,6 +15,7 @@ class BlockClockDial : public QQuickPaintedItem
     Q_PROPERTY(double verificationProgress READ verificationProgress WRITE setVerificationProgress)
     Q_PROPERTY(bool synced READ synced WRITE setSynced)
     Q_PROPERTY(bool paused READ paused WRITE setPaused)
+    Q_PROPERTY(int penWidth READ penWidth WRITE setPenWidth)
     Q_PROPERTY(QColor backgroundColor READ backgroundColor WRITE setBackgroundColor)
     Q_PROPERTY(QColor timeTickColor READ timeTickColor WRITE setTimeTickColor)
 
@@ -26,6 +27,7 @@ public:
     double verificationProgress() const { return m_verification_progress; };
     bool synced() const { return m_is_synced; };
     bool paused() const { return m_is_paused; };
+    int penWidth() const { return m_pen_width; };
     QColor backgroundColor() const { return m_background_color; };
     QColor timeTickColor() const { return m_time_tick_color; };
 
@@ -34,6 +36,7 @@ public Q_SLOTS:
     void setVerificationProgress(double progress);
     void setSynced(bool synced);
     void setPaused(bool paused);
+    void setPenWidth(int pen_width);
     void setBackgroundColor(QColor color);
     void setTimeTickColor(QColor color);
 
@@ -49,6 +52,7 @@ private:
     double m_verification_progress;
     bool m_is_synced;
     bool m_is_paused;
+    int m_pen_width;
     QColor m_background_color;
     QColor m_time_tick_color;
 };

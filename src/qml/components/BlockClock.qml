@@ -17,9 +17,18 @@ Item {
     implicitHeight: 200
 
     property alias header: mainText.text
-    property alias headerSize: mainText.font.pixelSize
+    //property alias headerSize: 32
     property alias subText: subText.text
-    property int headerSize: 32
+    property int penWidth: 4
+    property int headerSize: 24
+    property int iconSize: 40
+    property int mainTextSize: 32
+    property int subTextSize: 18
+    property int stateTopMargin: 4
+    property int stateBottomMargin: 5
+    property int peersIndicatorWidth: 3
+    property int peersIndicatorTopMargin: 20
+    property int peersIndicatorSpacing: 5
     property bool synced: nodeModel.verificationProgress > 0.999
     property bool paused: false
     property bool conns: true
@@ -31,6 +40,7 @@ Item {
         verificationProgress: nodeModel.verificationProgress
         paused: root.paused
         synced: nodeModel.verificationProgress > 0.999
+        penWidth: root.penWidth
         backgroundColor: Theme.color.neutral2
         timeTickColor: Theme.color.neutral5
     }
@@ -40,8 +50,8 @@ Item {
         background: null
         icon.source: "image://images/bitcoin-circle"
         icon.color: Theme.color.neutral9
-        icon.width: 40
-        icon.height: 40
+        icon.width: root.iconSize
+        icon.height: root.iconSize
         anchors.bottom: mainText.top
         anchors.horizontalCenter: root.horizontalCenter
     }
@@ -51,7 +61,7 @@ Item {
         anchors.centerIn: parent
         font.family: "Inter"
         font.styleName: "Semi Bold"
-        font.pixelSize: 32
+        font.pixelSize: root.mainTextSize
         color: Theme.color.neutral9
     }
 
@@ -61,22 +71,22 @@ Item {
         anchors.horizontalCenter: root.horizontalCenter
         font.family: "Inter"
         font.styleName: "Semi Bold"
-        font.pixelSize: 18
+        font.pixelSize: root.subTextSize
         color: Theme.color.neutral4
     }
 
     RowLayout {
         id: peersIndicator
         anchors.top: subText.bottom
-        anchors.topMargin: 20
+        anchors.topMargin: root.peersIndicatorTopMargin
         anchors.horizontalCenter: root.horizontalCenter
-        spacing: 5
+        spacing: root.peersIndicatorSpacing
         Repeater {
             model: 5
             Rectangle {
-                width: 3
-                height: width
-                radius: width/2
+                width: root.peersIndicatorWidth
+                height: root.peersIndicatorWidth
+                radius: root.peersIndicatorWidth/2
                 color: Theme.color.neutral9
             }
         }
@@ -114,16 +124,16 @@ Item {
             PropertyChanges {
                 target: root
                 header: "Paused"
-                headerSize: 24
+                headerSize: root.headerSize
                 subText: "Tap to resume"
             }
             PropertyChanges {
                 target: bitcoinIcon
-                anchors.bottomMargin: 5
+                anchors.bottomMargin: root.stateBottomMargin
             }
             PropertyChanges {
                 target: subText
-                anchors.topMargin: 4
+                anchors.topMargin: root.stateTopMargin
             }
         },
 
@@ -132,17 +142,47 @@ Item {
             PropertyChanges {
                 target: root
                 header: "Connecting"
-                headerSize: 24
+                headerSize: root.headerSize
                 subText: "Please Wait"
             }
             PropertyChanges {
                 target: bitcoinIcon
-                anchors.bottomMargin: 5
+                anchors.bottomMargin: root.stateBottomMargin
             }
             PropertyChanges {
                 target: subText
-                anchors.topMargin: 4
+                anchors.topMargin: root.stateTopMargin
             }
         }
     ]
+
+    function doubleSize() {
+        root.implicitWidth *= 2
+        root.implicitHeight *= 2
+        root.penWidth *= 2
+        root.headerSize *= 2
+        root.iconSize *= 2
+        root.mainTextSize *= 2
+        root.subTextSize *= 2
+        root.stateTopMargin *= 2
+        root.stateBottomMargin *= 2
+        root.peersIndicatorWidth *= 2
+        root.peersIndicatorTopMargin *= 2
+        root.peersIndicatorSpacing *= 2
+    }
+
+    function halfSize() {
+        root.implicitWidth /= 2
+        root.implicitHeight /= 2
+        root.penWidth /= 2
+        root.headerSize /= 2
+        root.iconSize /= 2
+        root.mainTextSize /= 2
+        root.subTextSize /= 2
+        root.stateTopMargin /= 2
+        root.stateBottomMargin /= 2
+        root.peersIndicatorWidth /= 2
+        root.peersIndicatorTopMargin /= 2
+        root.peersIndicatorSpacing /= 2
+    }
 }

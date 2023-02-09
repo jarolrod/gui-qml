@@ -41,6 +41,12 @@ void BlockClockDial::setPaused(bool paused)
     update();
 }
 
+void BlockClockDial::setPenWidth(int pen_width)
+{
+    m_pen_width = pen_width;
+    update();
+}
+
 void BlockClockDial::setBackgroundColor(QColor color)
 {
     m_background_color = color;
@@ -81,7 +87,7 @@ void BlockClockDial::paintBlocks(QPainter * painter)
     }
 
     QPen pen(QColor("#F1D54A"));
-    pen.setWidth(4);
+    pen.setWidth(m_pen_width);
     pen.setCapStyle(Qt::FlatCap);
     const QRectF bounds = getBoundsForPen(pen);
     painter->setPen(pen);
@@ -103,7 +109,7 @@ void BlockClockDial::paintBlocks(QPainter * painter)
     for (int i = 1; i < numberOfBlocks; i++) {
         if (numberOfBlocks - i <= 6) {
             QPen pen(confirmationColors[numberOfBlocks - i - 1]);
-            pen.setWidth(4);
+            pen.setWidth(m_pen_width);
             pen.setCapStyle(Qt::FlatCap);
             painter->setPen(pen);
         }
@@ -126,7 +132,7 @@ void BlockClockDial::paintBlocks(QPainter * painter)
 void BlockClockDial::paintProgress(QPainter * painter)
 {
     QPen pen(QColor("#F1D54A"));
-    pen.setWidthF(4);
+    pen.setWidthF(m_pen_width);
     pen.setCapStyle(Qt::RoundCap);
     const QRectF bounds = getBoundsForPen(pen);
     painter->setPen(pen);
@@ -144,7 +150,7 @@ void BlockClockDial::paintProgress(QPainter * painter)
 void BlockClockDial::paintBackground(QPainter * painter)
 {
     QPen pen(m_background_color);
-    pen.setWidthF(4);
+    pen.setWidthF(m_pen_width);
     const QRectF bounds = getBoundsForPen(pen);
     painter->setPen(pen);
 
@@ -160,12 +166,12 @@ double BlockClockDial::degreesPerPixel()
 void BlockClockDial::paintTimeTicks(QPainter * painter)
 {
     QPen pen(m_time_tick_color);
-    pen.setWidthF(4);
+    pen.setWidthF(m_pen_width);
     // Calculate bound based on width of default pen
     const QRectF bounds = getBoundsForPen(pen);
 
     QPen time_tick_pen = QPen(m_time_tick_color);
-    time_tick_pen.setWidth(2);
+    time_tick_pen.setWidth(m_pen_width / 2);
     time_tick_pen.setCapStyle(Qt::RoundCap);
     painter->setPen(time_tick_pen);
     for (double angle = 0; angle < 360; angle += 30) {

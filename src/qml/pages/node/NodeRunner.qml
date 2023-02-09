@@ -19,6 +19,7 @@ Page {
     Component.onCompleted: nodeModel.startNodeInitializionThread();
 
     ColumnLayout {
+        id: blockclockContainer
         spacing: 30
         anchors.centerIn: parent
         BlockClock {
@@ -26,7 +27,26 @@ Page {
           Layout.alignment: Qt.AlignCenter
         }
         NetworkIndicator {
+            id: networkIndicator
             Layout.alignment: Qt.AlignCenter
+        }
+    }
+
+    Shortcut {
+        sequence: "Ctrl+D"
+        onActivated: {
+            blockclockContainer.spacing *= 2
+            blockClock.doubleSize()
+            networkIndicator.doubleSize()
+        }
+    }
+
+    Shortcut {
+        sequence: "Ctrl+M"
+        onActivated: {
+            blockclockContainer.spacing /= 2
+            blockClock.halfSize()
+            networkIndicator.halfSize()
         }
     }
 }

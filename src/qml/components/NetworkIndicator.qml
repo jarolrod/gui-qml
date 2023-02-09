@@ -13,6 +13,7 @@ Button {
     id: root
     property color bgColor
     property int textSize: 18
+    property int bgRadius: 2
     font.family: "Inter"
     font.styleName: "Regular"
     font.pixelSize: root.textSize
@@ -28,7 +29,7 @@ Button {
     background: Rectangle {
         id: bg
         color: root.bgColor
-        radius: 2
+        radius: root.bgRadius
     }
     states: [
         State {
@@ -66,4 +67,22 @@ Button {
             }
         }
     ]
+
+    function doubleSize() {
+        root.width *= 2
+        root.height *= 2
+        root.textSize *= 2
+        root.padding *= 2
+        root.bgRadius *= 2
+    }
+
+    function halfSize() {
+        if (!((root.textSize / 2) < 18)) {
+            root.width /= 2
+            root.height /= 2
+            root.textSize /= 2
+            root.padding /= 2
+            root.bgRadius /= 2
+        }
+    }
 }
