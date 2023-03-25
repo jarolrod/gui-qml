@@ -43,6 +43,7 @@ QT_MOC_CPP = \
   qml/moc_nodemodel.cpp \
   qml/moc_options_model.cpp \
   qml/moc_peerlistsortproxy.cpp \
+  qml/moc_systemprofiler.cpp \
   qt/moc_addressbookpage.cpp \
   qt/moc_addresstablemodel.cpp \
   qt/moc_askpassphrasedialog.cpp \
@@ -124,6 +125,7 @@ BITCOIN_QT_H = \
   qml/nodemodel.h \
   qml/options_model.h \
   qml/peerlistsortproxy.h \
+  qml/systemprofiler.h \
   qml/util.h \
   qt/addressbookpage.h \
   qt/addresstablemodel.h \
@@ -309,6 +311,7 @@ BITCOIN_QML_BASE_CPP = \
   qml/nodemodel.cpp \
   qml/options_model.cpp \
   qml/peerlistsortproxy.cpp \
+  qml/systemprofiler.cpp \
   qml/util.cpp
 
 QML_RES_FONTS = \

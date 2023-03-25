@@ -2,10 +2,24 @@ pragma Singleton
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 
+import org.bitcoincore.qt 1.0
+
 Control {
-    property bool dark: true
+    property bool dark: systemProfiler.darkMode
     readonly property ColorSet color: dark ? darkColorSet : lightColorSet
     readonly property ImageSet image: dark ? darkImageSet : lightImageSet
+
+    SystemPalette {
+        id: systemColor
+
+        onBaseChanged: {
+            systemProfiler.systemBaseColor = systemColor.base
+        }
+    }
+
+    Component.onCompleted: {
+        systemProfiler.systemBaseColor = systemColor.base
+    }
 
     component ColorSet: QtObject {
         required property color white
