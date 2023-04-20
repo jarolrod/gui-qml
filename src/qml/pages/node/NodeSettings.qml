@@ -39,7 +39,7 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 Setting {
                     Layout.fillWidth: true
-                    header: qsTr("Dark Mode")
+                    header: qsTr("Color Theme")
                     actionItem: OptionSwitch {
                         checked: Theme.dark
                         onToggled: Theme.toggleDark()
