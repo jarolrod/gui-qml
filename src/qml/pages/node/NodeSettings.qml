@@ -38,16 +38,6 @@ Item {
                 width: Math.min(parent.width, 450)
                 anchors.horizontalCenter: parent.horizontalCenter
                 Setting {
-                    Layout.fillWidth: true
-                    header: qsTr("Dark Mode")
-                    actionItem: OptionSwitch {
-                        checked: Theme.dark
-                        onToggled: Theme.toggleDark()
-                    }
-                    onClicked: loadedItem.toggled()
-                }
-                Separator { Layout.fillWidth: true }
-                Setting {
                     id: gotoAbout
                     Layout.fillWidth: true
                     header: qsTr("About")
@@ -55,6 +45,19 @@ Item {
                         stateColor: gotoAbout.stateColor
                         onClicked: {
                             nodeSettingsView.push(about_page)
+                        }
+                    }
+                    onClicked: loadedItem.clicked()
+                }
+                Separator { Layout.fillWidth: true }
+                Setting {
+                    id: gotoDisplay
+                    Layout.fillWidth: true
+                    header: qsTr("Display")
+                    actionItem: CaretRightButton {
+                        stateColor: gotoDisplay.stateColor
+                        onClicked: {
+                            nodeSettingsView.push(display_page)
                         }
                     }
                     onClicked: loadedItem.clicked()
@@ -128,6 +131,18 @@ Item {
         }
     }
     Component {
+        id: display_page
+        SettingsDisplay {
+            navLeftDetail: NavButton {
+                iconSource: "image://images/caret-left"
+                text: qsTr("Back")
+                onClicked: {
+                    nodeSettingsView.pop()
+                }
+            }
+        }
+    }
+    Component {
         id: storage_page
         SettingsStorage {
             navLeftDetail: NavButton {
@@ -161,6 +176,11 @@ Item {
                     nodeSettingsView.pop()
                     peerTableModel.stopAutoRefresh();
                 }
+            }
+            navMiddleDetail: Header {
+                headerBold: true
+                headerSize: 18
+                header: qsTr("Peers")
             }
         }
     }
