@@ -191,19 +191,10 @@ Item {
     Component {
         id: peers_page
         Peers {
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    nodeSettingsView.pop()
-                    peerTableModel.stopAutoRefresh();
-                }
-            }
-            navMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("Peers")
-            }
+           onBackClicked: {
+               nodeSettingsView.pop()
+               peerTableModel.stopAutoRefresh();
+           }
         }
     }
     Component {
