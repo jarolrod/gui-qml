@@ -34,7 +34,7 @@ Pane {
         Div {
             id: right_div
             Layout.topMargin: 4
-            Layout.leftMargin: 4
+            Layout.rightMargin: 4
             Layout.preferredWidth: Math.floor(Math.max(left_div.implicitWidth, right_div.implicitWidth))
             contentItem: RowLayout {
                 Spacer {
