@@ -9,18 +9,26 @@ import "../../controls"
 import "../../components"
 
 Page {
-    id: proxy_settings
-    property alias navLeftDetail: navbar.leftDetail
-    property alias navMiddleDetail: navbar.middleDetail
+    signal backClicked
 
+    id: root
     background: null
     implicitWidth: 450
     leftPadding: 20
     rightPadding: 20
     topPadding: 30
 
-    header: NavigationBar {
-        id: navbar
+    header: NavigationBar2 {
+        leftItem: NavButton {
+            iconSource: "image://images/caret-left"
+            text: qsTr("Back")
+            onClicked: root.backClicked()
+        }
+        centerItem: Header {
+            headerBold: true
+            headerSize: 18
+            header: qsTr("Proxy Settings")
+        }
     }
     ProxySettings {
         width: Math.min(parent.width, 450)

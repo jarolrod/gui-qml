@@ -13,9 +13,9 @@ Page {
     property alias bannerItem: banner_loader.sourceComponent
     property alias detailItem: detail_loader.sourceComponent
     property alias loadedDetailItem: detail_loader.item
-    property alias navLeftDetail: navbar.leftDetail
-    property alias navMiddleDetail: navbar.middleDetail
-    property alias navRightDetail: navbar.rightDetail
+    property alias navLeftItem: navbar.leftItem
+    property alias navCenterItem: navbar.centerItem
+    property alias navRightItem: navbar.rightItem
     property string buttonText: ""
     property int buttonMargin: 40
     property bool bannerActive: true
@@ -41,7 +41,7 @@ Page {
     background: null
     clip: true
 
-    header: NavigationBar {
+    header: NavigationBar2 {
       id: navbar
     }
 

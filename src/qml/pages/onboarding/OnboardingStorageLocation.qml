@@ -10,10 +10,13 @@ import "../../controls"
 import "../../components"
 
 InformationPage {
-    navLeftDetail: NavButton {
+    signal backClicked
+
+    id: root
+    navLeftItem: NavButton {
         iconSource: "image://images/caret-left"
         text: qsTr("Back")
-        onClicked: swipeView.decrementCurrentIndex()
+        onClicked: root.backClicked()
     }
     bannerActive: false
     bold: true

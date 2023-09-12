@@ -9,6 +9,25 @@ import "../../controls"
 import "../../components"
 
 InformationPage {
+    signal backClicked
+    signal doneClicked
+
+    id: root
+    navLeftItem: NavButton {
+        iconSource: "image://images/caret-left"
+        text: qsTr("Back")
+        onClicked: root.backClicked()
+    }
+    navCenterItem: Header {
+        headerBold: true
+        headerSize: 18
+        header: qsTr("Storage settings")
+    }
+    navRightItem: NavButton {
+        text: qsTr("Done")
+        onClicked: root.doneClicked()
+    }
+
     bannerActive: false
     bold: true
     headerText: qsTr("Storage settings")

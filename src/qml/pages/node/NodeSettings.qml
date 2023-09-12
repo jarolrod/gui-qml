@@ -11,27 +11,31 @@ import "../settings"
 
 Item {
     id: nodeSettings
-    property alias navMiddleDetail: nodeSettingsView.navMiddleDetail
-    property alias navRightDetail: nodeSettingsView.navRightDetail
+    signal doneClicked
 
     StackView {
         id: nodeSettingsView
-        property alias navMiddleDetail: node_settings.navMiddleDetail
-        property alias navRightDetail: node_settings.navRightDetail
         anchors.fill: parent
 
         initialItem: Page {
             id: node_settings
-            property alias navMiddleDetail: navbar.middleDetail
-            property alias navRightDetail: navbar.rightDetail
             background: null
             implicitWidth: 450
             leftPadding: 20
             rightPadding: 20
             topPadding: 30
 
-            header: NavigationBar {
+            header: NavigationBar2 {
                 id: navbar
+                centerItem: Header {
+                    headerBold: true
+                    headerSize: 18
+                    header: "Settings"
+                }
+                rightItem: NavButton {
+                    text: qsTr("Done")
+                    onClicked: nodeSettings.doneClicked()
+                }
             }
             ColumnLayout {
                 spacing: 4
@@ -116,39 +120,16 @@ Item {
         id: about_page
         SettingsAbout {
             showHeader: false
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    nodeSettingsView.pop()
-                }
-            }
-            navMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("About")
-            }
-            devMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("Developer settings")
+            onBackClicked: {
+                nodeSettingsView.pop()
             }
         }
     }
     Component {
         id: display_page
         SettingsDisplay {
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    nodeSettingsView.pop()
-                }
-            }
-            navMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("Display settings")
+            onBackClicked: {
+                nodeSettingsView.pop()
             }
         }
     }
@@ -156,17 +137,8 @@ Item {
         id: storage_page
         SettingsStorage {
             showHeader: false
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    nodeSettingsView.pop()
-                }
-            }
-            navMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("Storage settings")
+            onBackClicked: {
+                nodeSettingsView.pop()
             }
         }
     }
@@ -174,17 +146,8 @@ Item {
         id: connection_page
         SettingsConnection {
             showHeader: false
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    nodeSettingsView.pop()
-                }
-            }
-            navMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("Connection settings")
+            onBackClicked: {
+                nodeSettingsView.pop()
             }
         }
     }
@@ -201,17 +164,8 @@ Item {
         id: networktraffic_page
         NetworkTraffic {
             showHeader: false
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    nodeSettingsView.pop()
-                }
-            }
-            navMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("Network traffic")
+            onBackClicked: {
+                nodeSettingsView.pop()
             }
         }
     }

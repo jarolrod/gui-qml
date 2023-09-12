@@ -10,6 +10,7 @@ import "../../components"
 import "../settings"
 
 Page {
+    id: root
     background: null
     clip: true
     SwipeView {
@@ -18,7 +19,7 @@ Page {
         interactive: false
         orientation: Qt.Horizontal
         InformationPage {
-            navRightDetail: NavButton {
+            navRightItem: NavButton {
                 iconSource: "image://images/info"
                 iconHeight: 24
                 iconWidth: 24
@@ -50,12 +51,8 @@ Page {
             buttonText: qsTr("Start")
         }
         SettingsAbout {
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    introductions.decrementCurrentIndex()
-                }
+            onBackClicked: {
+                introductions.decrementCurrentIndex()
             }
         }
     }

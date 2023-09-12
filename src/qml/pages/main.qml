@@ -60,11 +60,21 @@ ApplicationWindow {
             interactive: false
 
             OnboardingCover {}
-            OnboardingStrengthen {}
-            OnboardingBlockclock {}
-            OnboardingStorageLocation {}
-            OnboardingStorageAmount {}
-            OnboardingConnection {}
+            OnboardingStrengthen {
+                onBackClicked: swipeView.decrementCurrentIndex()
+            }
+            OnboardingBlockclock {
+                onBackClicked: swipeView.decrementCurrentIndex()
+            }
+            OnboardingStorageLocation {
+                onBackClicked: swipeView.decrementCurrentIndex()
+            }
+            OnboardingStorageAmount {
+                onBackClicked: swipeView.decrementCurrentIndex()
+            }
+            OnboardingConnection {
+                onBackClicked: swipeView.decrementCurrentIndex()
+            }
 
             onFinishedChanged: main.push(node)
         }
@@ -87,14 +97,8 @@ ApplicationWindow {
                 }
             }
             NodeSettings {
-                navMiddleDetail: Header {
-                    headerBold: true
-                    headerSize: 18
-                    header: "Settings"
-                }
-                navRightDetail: NavButton {
-                    text: qsTr("Done")
-                    onClicked: node_swipe.decrementCurrentIndex()
+                onDoneClicked: {
+                    node_swipe.decrementCurrentIndex()
                 }
             }
         }

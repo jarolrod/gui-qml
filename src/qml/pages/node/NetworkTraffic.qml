@@ -12,12 +12,25 @@ import "../../components"
 import org.bitcoincore.qt 1.0
 
 InformationPage {
+    signal backClicked
+
     id: root
     property int trafficGraphScale: 300
 
     Settings {
         id: settings
         property alias trafficGraphScale: root.trafficGraphScale
+    }
+
+    navLeftItem: NavButton {
+        iconSource: "image://images/caret-left"
+        text: qsTr("Back")
+        onClicked: root.backClicked()
+        }
+    navCenterItem: Header {
+        headerBold: true
+        headerSize: 18
+        header: qsTr("Network traffic")
     }
 
     bannerActive: false

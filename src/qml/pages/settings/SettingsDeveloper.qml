@@ -9,6 +9,20 @@ import "../../controls"
 import "../../components"
 
 InformationPage {
+    signal backClicked
+
+    id: root
+    navLeftItem: NavButton {
+        iconSource: "image://images/caret-left"
+        text: qsTr("Back")
+        onClicked: root.backClicked()
+    }
+    navCenterItem: Header {
+        headerBold: true
+        headerSize: 18
+        header: qsTr("Developer settings")
+    }
+
     bannerActive: false
     bold: true
     headerText: qsTr("Developer options")

@@ -9,21 +9,30 @@ import "../../controls"
 import "../../components"
 
 Item {
-    property alias navLeftDetail: aboutSwipe.navLeftDetail
-    property alias navMiddleDetail: aboutSwipe.navMiddleDetail
-    property alias devMiddleDetail: aboutSwipe.devMiddleDetail
+    signal backClicked
+
+    id: root
     property alias showHeader: aboutSwipe.showHeader
     SwipeView {
         id: aboutSwipe
-        property alias navLeftDetail: about_settings.navLeftDetail
-        property alias navMiddleDetail: about_settings.navMiddleDetail
-        property alias devMiddleDetail: about_developer.navMiddleDetail
         property alias showHeader: about_settings.showHeader
         anchors.fill: parent
         interactive: false
         orientation: Qt.Horizontal
         InformationPage {
             id: about_settings
+
+            navLeftItem: NavButton {
+                iconSource: "image://images/caret-left"
+                text: qsTr("Back")
+                onClicked: root.backClicked()
+            }
+            navCenterItem: Header {
+                headerBold: true
+                headerSize: 18
+                header: qsTr("About")
+            }
+
             bannerActive: false
             bannerMargin: 0
             bold: true
@@ -37,13 +46,7 @@ Item {
         SettingsDeveloper {
             id: about_developer
             showHeader: about_settings.showHeader
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    aboutSwipe.decrementCurrentIndex()
-                }
-            }
+            onBackClicked: aboutSwipe.decrementCurrentIndex()
         }
     }
 }

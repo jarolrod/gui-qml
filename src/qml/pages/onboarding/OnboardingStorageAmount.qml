@@ -10,6 +10,9 @@ import "../../components"
 import "../settings"
 
 Page {
+    signal backClicked
+
+    id: root
     background: null
     clip: true
     SwipeView {
@@ -18,10 +21,10 @@ Page {
         interactive: false
         orientation: Qt.Vertical
         InformationPage {
-            navLeftDetail: NavButton {
+            navLeftItem: NavButton {
                 iconSource: "image://images/caret-left"
                 text: qsTr("Back")
-                onClicked: swipeView.decrementCurrentIndex()
+                onClicked: root.backClicked()
             }
             bannerActive: false
             bold: true
@@ -50,12 +53,7 @@ Page {
         }
         SettingsStorage {
             id: advancedStorage
-            navRightDetail: NavButton {
-                text: qsTr("Done")
-                onClicked: {
-                    storages.decrementCurrentIndex()
-                }
-            }
+            onDoneClicked: storages.decrementCurrentIndex()
         }
     }
 }
