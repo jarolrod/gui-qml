@@ -13,55 +13,88 @@
 class NetworkTrafficTower : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(float totalBytesReceived READ totalBytesReceived NOTIFY totalBytesReceivedChanged)
+    Q_PROPERTY(float totalBytesRecv READ totalBytesRecv NOTIFY totalBytesRecvChanged)
     Q_PROPERTY(float totalBytesSent READ totalBytesSent NOTIFY totalBytesSentChanged)
-    Q_PROPERTY(float maxReceivedRateBps READ maxReceivedRateBps NOTIFY maxReceivedRateBpsChanged)
+    Q_PROPERTY(float maxRecvRateBps READ maxRecvRateBps NOTIFY maxRecvRateBpsChanged)
     Q_PROPERTY(float maxSentRateBps READ maxSentRateBps NOTIFY maxSentRateBpsChanged)
-    Q_PROPERTY(QQueue<float> receivedRateList READ receivedRateList NOTIFY receivedRateListChanged)
+    Q_PROPERTY(QQueue<float> recvRateList READ recvRateList NOTIFY recvRateListChanged)
     Q_PROPERTY(QQueue<float> sentRateList READ sentRateList NOTIFY sentRateListChanged)
 
 public:
     explicit NetworkTrafficTower(NodeModel& node);
 
-    float totalBytesReceived() const { return m_total_bytes_received; }
+    float totalBytesRecv() const { return m_total_bytes_recv; }
     float totalBytesSent() const { return m_total_bytes_sent; }
-    float maxReceivedRateBps() const { return m_max_received_rate_bps; }
-    float maxSentRateBps() const { return m_max_sent_rate_bps; }
-    QQueue<float> receivedRateList() { return m_smoothed_received_rate_list; }
-    QQueue<float> sentRateList() { return m_smoothed_sent_rate_list; }
+    float maxRecvRateBps() const { return *m_max_recv_duration_rate_bps; }
+    float maxSentRateBps() const { return *m_max_sent_duration_rate_bps; }
+    QQueue<float> recvRateList() { return *m_smoothed_duration_recv_rate_list; }
+    QQueue<float> sentRateList() { return *m_smoothed_duration_sent_rate_list; }
 
 public Q_SLOTS:
-    void setTotalBytesReceived(float new_total);
+    void setTotalBytesRecv(float new_total);
     void setTotalBytesSent(float new_total);
-    void setMaxReceivedRateBps(float new_max);
-    void setMaxSentRateBps(float new_max);
+    void setMaxRecvDurationRateBps(float * new_max);
+    void setMaxSentDurationRateBps(float * new_max);
+    void setSmoothedDurationRecvRateList(QQueue<float> * smoothed_duration_recv_rate_list);
+    void setSmoothedDurationSentRateList(QQueue<float> * smoothed_duration_sent_rate_list);
 
-    Q_INVOKABLE void updateFilterWindowSize(int new_size);
+    void setDurationAdjustedValues();
+    Q_INVOKABLE void updateDuration(int new_duration);
 
 Q_SIGNALS:
-    void totalBytesReceivedChanged();
+    void totalBytesRecvChanged();
     void totalBytesSentChanged();
-    void maxReceivedRateBpsChanged();
+    void maxRecvRateBpsChanged();
     void maxSentRateBpsChanged();
-    void receivedRateListChanged();
+    void recvRateListChanged();
     void sentRateListChanged();
 
 private:
-    float applyMovingAverageFilter(QQueue<float> * rate_list);
-    float calculateMaxRateBps(QQueue<float> * smoothed_rate_list);
-    void recalculateSmoothedRateList(QQueue<float> * raw_rate_list, QQueue<float> * smoothed_rate_list);
+    struct DurationTrafficData {
+        int duration;
+        float* maxRecvRateBps;
+        float* maxSentRateBps;
+        QQueue<float> * smoothedRecvRateList;
+        QQueue<float> * smoothedSentRateList;
+    };
+
+    float applyMovingAverageFilter(QQueue<float> * rate_list, int duration);
+    float calculateMaxRateBps(QQueue<float> * smoothed_duration_rate_list);
+    void pruneRateList(QQueue<float> * rate_list, int duration);
+    void updateSmoothedDurationRates(QQueue<float> * rate_list, QQueue<float> * smoothed_duration_rate_list, float * max_duration_rate_bps, int duration);
     void updateTrafficStats();
 
     NodeModel& m_node;
-    int m_filter_window_size;
-    float m_total_bytes_received{0.0f};
+    int m_duration{300};
+    float m_total_bytes_recv{0.0f};
     float m_total_bytes_sent{0.0f};
-    float m_max_received_rate_bps{0.0f};
-    float m_max_sent_rate_bps{0.0f};
-    QQueue<float> m_received_rate_list;
-    QQueue<float> m_smoothed_received_rate_list;
-    QQueue<float> m_sent_rate_list;
-    QQueue<float> m_smoothed_sent_rate_list;
+    DurationTrafficData networkTrafficData[4];
+    // max received bps rates
+    float * m_max_recv_duration_rate_bps;
+    float m_max_recv_five_minutes_rate_bps{0.0f};
+    float m_max_recv_one_hour_rate_bps{0.0f};
+    float m_max_recv_twelve_hours_rate_bps{0.0f};
+    float m_max_recv_one_day_rate_bps{0.0f};
+    // max sent bps rates
+    float * m_max_sent_duration_rate_bps;
+    float m_max_sent_five_minutes_rate_bps{0.0f};
+    float m_max_sent_one_hour_rate_bps{0.0f};
+    float m_max_sent_twelve_hours_rate_bps{0.0f};
+    float m_max_sent_one_day_rate_bps{0.0f};
+    // received rate lists
+    QQueue<float> m_raw_recv_rate_list;
+    QQueue<float> * m_smoothed_duration_recv_rate_list;
+    QQueue<float> m_smoothed_five_minutes_recv_rate_list;
+    QQueue<float> m_smoothed_one_hour_recv_rate_list;
+    QQueue<float> m_smoothed_twelve_hours_recv_rate_list;
+    QQueue<float> m_smoothed_one_day_recv_rate_list;
+    // sent rate lists
+    QQueue<float> m_raw_sent_rate_list;
+    QQueue<float> * m_smoothed_duration_sent_rate_list;
+    QQueue<float> m_smoothed_five_minutes_sent_rate_list;
+    QQueue<float> m_smoothed_one_hour_sent_rate_list;
+    QQueue<float> m_smoothed_twelve_hours_sent_rate_list;
+    QQueue<float> m_smoothed_one_day_sent_rate_list;
 };
 
 #endif // BITCOIN_QML_MODELS_NETWORKTRAFFICTOWER_H

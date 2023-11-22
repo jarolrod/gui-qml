@@ -8,7 +8,10 @@
 #include <QThread>
 #include <QTimer>
 
-#define MAX_SAMPLES      86400
+#define FIVE_MINUTES_SAMPLES 300
+#define ONE_HOUR_SAMPLES 3600
+#define TWELVE_HOURS_SAMPLES 43200
+#define ONE_DAY_SAMPLES 86400
 
 NetworkTrafficTower::NetworkTrafficTower(NodeModel& node)
     : m_node{node}
@@ -21,13 +24,16 @@ NetworkTrafficTower::NetworkTrafficTower(NodeModel& node)
     timer->moveToThread(timer_thread);
     timer_thread->start();
 
-    m_filter_window_size = 30;
+    networkTrafficData[0] = { FIVE_MINUTES_SAMPLES, &m_max_recv_five_minutes_rate_bps, &m_max_sent_five_minutes_rate_bps, &m_smoothed_five_minutes_recv_rate_list, &m_smoothed_five_minutes_sent_rate_list };
+    networkTrafficData[1] = { ONE_HOUR_SAMPLES, &m_max_recv_one_hour_rate_bps, &m_max_sent_one_hour_rate_bps, &m_smoothed_one_hour_recv_rate_list, &m_smoothed_one_hour_sent_rate_list };
+    networkTrafficData[2] = { TWELVE_HOURS_SAMPLES, &m_max_recv_twelve_hours_rate_bps, &m_max_sent_twelve_hours_rate_bps, &m_smoothed_twelve_hours_recv_rate_list, &m_smoothed_twelve_hours_sent_rate_list };
+    networkTrafficData[3] = { ONE_DAY_SAMPLES, &m_max_recv_one_day_rate_bps, &m_max_sent_one_day_rate_bps, &m_smoothed_one_day_recv_rate_list, &m_smoothed_one_day_sent_rate_list };
 }
 
-void NetworkTrafficTower::setTotalBytesReceived(float new_total)
+void NetworkTrafficTower::setTotalBytesRecv(float new_total)
 {
-    m_total_bytes_received = new_total;
-    Q_EMIT totalBytesReceivedChanged();
+    m_total_bytes_recv = new_total;
+    Q_EMIT totalBytesRecvChanged();
 }
 
 void NetworkTrafficTower::setTotalBytesSent(float new_total)
@@ -36,113 +42,112 @@ void NetworkTrafficTower::setTotalBytesSent(float new_total)
     Q_EMIT totalBytesSentChanged();
 }
 
-void NetworkTrafficTower::setMaxReceivedRateBps(float new_max)
+void NetworkTrafficTower::setMaxRecvDurationRateBps(float * new_max)
 {
-    m_max_received_rate_bps = new_max;
-    Q_EMIT maxReceivedRateBpsChanged();
+    m_max_recv_duration_rate_bps = new_max;
+    Q_EMIT maxRecvRateBpsChanged();
 }
 
-void NetworkTrafficTower::setMaxSentRateBps(float new_max)
+void NetworkTrafficTower::setMaxSentDurationRateBps(float * new_max)
 {
-    m_max_sent_rate_bps = new_max;
+    m_max_sent_duration_rate_bps = new_max;
     Q_EMIT maxSentRateBpsChanged();
 }
 
-void NetworkTrafficTower::updateFilterWindowSize(int new_size)
+void NetworkTrafficTower::setSmoothedDurationRecvRateList(QQueue<float> * smoothed_duration_recv_rate_list)
 {
-    if (!(m_filter_window_size == new_size)) {
-        m_filter_window_size = new_size;
+    m_smoothed_duration_recv_rate_list = smoothed_duration_recv_rate_list;
+    Q_EMIT recvRateListChanged();
+}
 
-        if (!m_received_rate_list.isEmpty()) {
-            recalculateSmoothedRateList(&m_received_rate_list, &m_smoothed_received_rate_list);
-            float new_max_received_rate = calculateMaxRateBps(&m_smoothed_received_rate_list);
-
-            setMaxReceivedRateBps(new_max_received_rate);
-            Q_EMIT receivedRateListChanged();
-        }
-        if (!m_sent_rate_list.isEmpty()) {
-            recalculateSmoothedRateList(&m_sent_rate_list, &m_smoothed_sent_rate_list);
-            float new_max_sent_rate = calculateMaxRateBps(&m_smoothed_sent_rate_list);
-
-            setMaxSentRateBps(new_max_sent_rate);
-            Q_EMIT sentRateListChanged();
-        }
-    }
+void NetworkTrafficTower::setSmoothedDurationSentRateList(QQueue<float> * smoothed_duration_sent_rate_list)
+{
+    m_smoothed_duration_sent_rate_list = smoothed_duration_sent_rate_list;
     Q_EMIT sentRateListChanged();
 }
 
-float NetworkTrafficTower::applyMovingAverageFilter(QQueue<float> * rate_list)
+void NetworkTrafficTower::setDurationAdjustedValues()
 {
-    int filter_window_size = std::min(rate_list->size(), m_filter_window_size);
+    for (const auto& data : durationLists) {
+        if (m_duration == data.duration) {
+            setMaxRecvDurationRateBps(data.maxRecvRateBps);
+            setMaxSentDurationRateBps(data.maxSentRateBps);
+            setSmoothedDurationRecvRateList(data.smoothedRecvRateList);
+            setSmoothedDurationSentRateList(data.smoothedSentRateList);
+            break;
+        }
+    }
+}
+
+void NetworkTrafficTower::updateDuration(int new_duration)
+{
+    m_duration = new_duration;
+    setDurationAdjustedValues();
+}
+
+float NetworkTrafficTower::applyMovingAverageFilter(QQueue<float> * rate_list, int duration)
+{
+    int lookback = std::min(rate_list->size(), duration);
     float sum = 0.0f;
-    for (int i = 0; i < filter_window_size; ++i) {
+    for (int i = 0; i < lookback; ++i) {
         sum += rate_list->at(i);
     }
 
-    return sum / filter_window_size;
+    return sum / duration;
 }
 
-float NetworkTrafficTower::calculateMaxRateBps(QQueue<float> * smoothed_rate_list)
+float NetworkTrafficTower::calculateMaxRateBps(QQueue<float> * smoothed_duration_rate_list)
 {
     float max_rate_bps = 0.0f;
-    int lookback = std::min(smoothed_rate_list->size() - 1, m_filter_window_size * 10);
-    for (int i = lookback; i > 0; --i) {
-        if (smoothed_rate_list->at(i) > max_rate_bps) {
-            max_rate_bps = smoothed_rate_list->at(i);
+    for (int i = smoothed_duration_rate_list->size() - 1; i > 0; --i) {
+        if (smoothed_duration_rate_list->at(i) > max_rate_bps) {
+            max_rate_bps = smoothed_duration_rate_list->at(i);
         }
     }
     return max_rate_bps;
 }
 
-void NetworkTrafficTower::recalculateSmoothedRateList(QQueue<float> * rate_list, QQueue<float> * smoothed_rate_list)
+void NetworkTrafficTower::pruneRateList(QQueue<float> * rate_list, int duration)
 {
-    smoothed_rate_list->clear();
-    QQueue<float> temp_list;
-    for (int i = rate_list->size() - 1; i > 0; --i) {
-        temp_list.push_front(rate_list->at(i));
-        float smoothed_rate = applyMovingAverageFilter(&temp_list);
-        smoothed_rate_list->push_front(smoothed_rate);
+    while (rate_list->size() > duration) {
+        rate_list->pop_back();
     }
+}
+
+void NetworkTrafficTower::updateSmoothedDurationRates(QQueue<float> * raw_rate_list, QQueue<float> * smoothed_duration_rate_list, float * max_duration_rate_bps, int duration)
+{
+    float smoothed_rate_bps = applyMovingAverageFilter(raw_rate_list, duration);
+    smoothed_duration_rate_list->push_front(smoothed_rate_bps);
+    pruneRateList(smoothed_duration_rate_list, duration);
+    *max_duration_rate_bps = calculateMaxRateBps(smoothed_duration_rate_list);
 }
 
 void NetworkTrafficTower::updateTrafficStats()
 {
-    float new_total_bytes_received = m_node.getTotalBytesReceived();
+    // 1. Get new total bytes received and sent from node
+    float new_total_bytes_recv = m_node.getTotalBytesReceived();
     float new_total_bytes_sent = m_node.getTotalBytesSent();
 
-    float rate_received_bps = (new_total_bytes_received - m_total_bytes_received);
-    float rate_sent_bps = (new_total_bytes_sent - m_total_bytes_sent);
+    // 2. Calculate new raw rate of bytes received and sent per second
+    float raw_rate_recv_bps = (new_total_bytes_recv - m_total_bytes_recv);
+    float raw_rate_sent_bps = (new_total_bytes_sent - m_total_bytes_sent);
 
-    setTotalBytesSent(new_total_bytes_sent);
-    setTotalBytesReceived(new_total_bytes_received);
+    // 3. Push new rate of bytes received and sent to raw rate lists
+    m_raw_recv_rate_list.push_front(raw_rate_recv_bps);
+    m_raw_sent_rate_list.push_front(raw_rate_sent_bps);
 
-    m_received_rate_list.push_front(rate_received_bps);
-    m_sent_rate_list.push_front(rate_sent_bps);
+    // 4. Prune raw rate lists
+    pruneRateList(&m_raw_recv_rate_list, ONE_DAY_SAMPLES);
+    pruneRateList(&m_raw_sent_rate_list, ONE_DAY_SAMPLES);
 
-    float smoothed_received_rate_bps = applyMovingAverageFilter(&m_received_rate_list);
-    float smoothed_sent_rate_bps = applyMovingAverageFilter(&m_sent_rate_list);
-
-    m_smoothed_received_rate_list.push_front(smoothed_received_rate_bps);
-    m_smoothed_sent_rate_list.push_front(smoothed_sent_rate_bps);
-
-    while (m_received_rate_list.size() > MAX_SAMPLES) {
-        m_received_rate_list.pop_back();
-        m_smoothed_received_rate_list.pop_back();
+    // 5. update rate lists
+    for (const auto& data : durationLists) {
+        updateSmoothedDurationRates(&m_raw_recv_rate_list, data.smoothedRecvRateList, data.maxRecvRateBps, data.duration);
+        updateSmoothedDurationRates(&m_raw_sent_rate_list, data.smoothedSentRateList, data.maxSentRateBps, data.duration);
     }
 
-    while (m_sent_rate_list.size() > MAX_SAMPLES) {
-        m_sent_rate_list.pop_back();
-        m_smoothed_sent_rate_list.pop_back();
-    }
-
-    float new_max_received_rate_bps = calculateMaxRateBps(&m_smoothed_received_rate_list);
-    float new_max_sent_rate_bps = calculateMaxRateBps(&m_smoothed_sent_rate_list);
-
+    // 7. Set new values
+    setTotalBytesRecv(new_total_bytes_recv);
     setTotalBytesSent(new_total_bytes_sent);
-    setTotalBytesReceived(new_total_bytes_received);
-    setMaxReceivedRateBps(new_max_received_rate_bps);
-    setMaxSentRateBps(new_max_sent_rate_bps);
-
-    Q_EMIT receivedRateListChanged();
-    Q_EMIT sentRateListChanged();
+    setDurationAdjustedValues();
 }

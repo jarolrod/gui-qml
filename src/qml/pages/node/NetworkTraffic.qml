@@ -61,7 +61,7 @@ InformationPage {
 
                     onClicked: {
                         root.trafficGraphScale = 300
-                        networkTrafficTower.updateFilterWindowSize(root.trafficGraphScale / 10)
+                        networkTrafficTower.updateDuration(root.trafficGraphScale)
                     }
                 }
 
@@ -77,7 +77,7 @@ InformationPage {
 
                     onClicked: {
                         root.trafficGraphScale = 3600
-                        networkTrafficTower.updateFilterWindowSize(root.trafficGraphScale / 10)
+                        networkTrafficTower.updateDuration(root.trafficGraphScale)
                     }
                 }
 
@@ -93,7 +93,7 @@ InformationPage {
 
                     onClicked: {
                         root.trafficGraphScale = 3600 * 12
-                        networkTrafficTower.updateFilterWindowSize(root.trafficGraphScale / 10)
+                        networkTrafficTower.updateDuration(root.trafficGraphScale)
                     }
                 }
 
@@ -109,7 +109,7 @@ InformationPage {
 
                     onClicked: {
                         root.trafficGraphScale = 3600 * 24
-                        networkTrafficTower.updateFilterWindowSize(root.trafficGraphScale / 10)
+                        networkTrafficTower.updateDuration(root.trafficGraphScale)
                     }
                 }
             }
@@ -117,7 +117,7 @@ InformationPage {
 
         TotalBytesIndicator {
             Layout.alignment: Qt.AlignHCenter
-            indicatorText: qsTr("Received: %1").arg(formatBytes(networkTrafficTower.totalBytesReceived))
+            indicatorText: qsTr("Received: %1").arg(formatBytes(networkTrafficTower.totalBytesRecv))
             indicatorColor: Theme.color.green
         }
 
@@ -130,9 +130,9 @@ InformationPage {
             lineColor: Theme.color.green
             markerLineColor: Theme.color.neutral2
             maxSamples: root.trafficGraphScale
-            maxValue: networkTrafficTower.maxReceivedRateBps
-            valueList: networkTrafficTower.receivedRateList
-            maxRateBps: networkTrafficTower.maxReceivedRateBps
+            maxValue: networkTrafficTower.maxRecvRateBps
+            valueList: networkTrafficTower.recvRateList
+            maxRateBps: networkTrafficTower.maxRecvRateBps
         }
 
         TotalBytesIndicator {
