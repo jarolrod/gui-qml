@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2023 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@ class AppMode : public QObject
     Q_OBJECT
     Q_PROPERTY(bool isDesktop READ isDesktop NOTIFY modeChanged)
     Q_PROPERTY(bool isMobile READ isMobile NOTIFY modeChanged)
+    Q_PROPERTY(bool onboarding READ onboarding WRITE setOnboarding NOTIFY onboardingChanged)
     Q_PROPERTY(QString state READ state NOTIFY modeChanged)
 
 public:
@@ -26,6 +27,7 @@ public:
 
     bool isMobile() { return m_mode == MOBILE; }
     bool isDesktop() { return m_mode == DESKTOP; }
+    bool onboarding() { return m_onboarding; }
     QString state()
     {
         switch (m_mode) {
@@ -39,11 +41,17 @@ public:
     }
     Mode mode() const { return m_mode; }
 
+public Q_SLOTS:
+    Q_INVOKABLE void setOnboarding(bool onboarding);
+
 Q_SIGNALS:
     void modeChanged();
+    void onboardingChanged();
 
 private:
+    bool m_onboarding{false};
     const Mode m_mode;
+
 };
 
 #endif // BITCOIN_QML_APPMODE_H

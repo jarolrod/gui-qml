@@ -308,6 +308,7 @@ BITCOIN_QML_BASE_CPP = \
   qml/models/nodemodel.cpp \
   qml/models/options_model.cpp \
   qml/models/peerlistsortproxy.cpp \
+  qml/appmode.cpp \
   qml/imageprovider.cpp \
   qml/util.cpp
 
@@ -367,7 +368,6 @@ QML_RES_QML = \
   qml/controls/NavButton.qml \
   qml/controls/PageIndicator.qml \
   qml/controls/NavigationBar.qml \
-  qml/controls/NavigationBar2.qml \
   qml/controls/OptionButton.qml \
   qml/controls/OptionSwitch.qml \
   qml/controls/OutlineButton.qml \
@@ -391,6 +391,7 @@ QML_RES_QML = \
   qml/pages/onboarding/OnboardingStorageAmount.qml \
   qml/pages/onboarding/OnboardingStorageLocation.qml \
   qml/pages/onboarding/OnboardingStrengthen.qml \
+  qml/pages/onboarding/OnboardingWizard.qml \
   qml/pages/settings/SettingsAbout.qml \
   qml/pages/settings/SettingsBlockClockDisplayMode.qml \
   qml/pages/settings/SettingsConnection.qml \

@@ -5,37 +5,66 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import org.bitcoincore.qt 1.0
 import "../../controls"
 import "../../components"
 
-Item {
-    property alias navRightDetail: connectionSwipe.navRightDetail
-    property alias navMiddleDetail: connectionSwipe.navMiddleDetail
-    property alias navLeftDetail: connectionSwipe.navLeftDetail
-    property alias showHeader: connectionSwipe.showHeader
-    SwipeView {
-        id: connectionSwipe
-        property alias navRightDetail: connection_settings.navRightDetail
-        property alias navMiddleDetail: connection_settings.navMiddleDetail
-        property alias navLeftDetail: connection_settings.navLeftDetail
-        property alias showHeader: connection_settings.showHeader
+Pane {
+    id: root
+    signal backClicked
+    signal doneClicked
+
+    background: null
+
+    StackView {
+        id: connection_settings_stack_view
         anchors.fill: parent
-        interactive: false
-        orientation: Qt.Horizontal
+        initialItem: connection_settings
+    }
+
+    Component {
+        id: connection_settings
         InformationPage {
-            id: connection_settings
+            navLeftItem:  NavButton {
+                visible: !AppMode.onboarding
+                iconSource: "image://images/caret-left"
+                text: qsTr("Back")
+                onClicked: root.backClicked()
+            }
+            navCenterItem:  Header {
+                showHeader: !AppMode.onboarding
+                headerBold: true
+                headerSize: 18
+                header: qsTr("Connection settings")
+            }
+            navRightItem:  NavButton {
+                visible: AppMode.onboarding
+                text: qsTr("Done")
+                onClicked: root.doneClicked()
+            }
             background: null
             clip: true
             bannerActive: false
             bold: true
+            showHeader: AppMode.onboarding
             headerText: qsTr("Connection settings")
             headerMargin: 0
             detailActive: true
-            detailItem: ConnectionSettings {}
+            detailItem: ConnectionSettings {
+                onProxySettings: {
+                    connection_settings_stack_view.push(proxy_settings)
+                }
+            }
+
+            onNextClicked: connection_settings_view.push(proxy_settings)
         }
+    }
+
+    Component {
+        id: proxy_settings
         SettingsProxy {
             onBackClicked: {
-                connectionSwipe.decrementCurrentIndex()
+                connection_settings_view.pop()
             }
         }
     }

@@ -8,6 +8,9 @@ import QtQuick.Layouts 1.15
 import "../controls"
 
 ColumnLayout {
+    id: root
+    signal proxySettings
+
     spacing: 4
     Header {
         headerBold: true

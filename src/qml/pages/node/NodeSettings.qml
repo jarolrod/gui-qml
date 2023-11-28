@@ -26,7 +26,7 @@ Item {
             rightPadding: 20
             topPadding: 30
 
-            header: NavigationBar2 {
+            header: NavigationBar {
                 centerItem: Header {
                     headerBold: true
                     headerSize: 18
@@ -119,23 +119,8 @@ Item {
     Component {
         id: about_page
         SettingsAbout {
-            showHeader: false
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    nodeSettingsView.pop()
-                }
-            }
-            navMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("About")
-            }
-            devMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("Developer settings")
+            onBackClicked: {
+                nodeSettingsView.pop()
             }
         }
     }
@@ -150,36 +135,16 @@ Item {
     Component {
         id: storage_page
         SettingsStorage {
-            showHeader: false
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    nodeSettingsView.pop()
-                }
-            }
-            navMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("Storage settings")
+            onBackClicked: {
+                nodeSettingsView.pop()
             }
         }
     }
     Component {
         id: connection_page
         SettingsConnection {
-            showHeader: false
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    nodeSettingsView.pop()
-                }
-            }
-            navMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("Connection settings")
+            onBackClicked: {
+                nodeSettingsView.pop()
             }
         }
     }
@@ -195,18 +160,8 @@ Item {
     Component {
         id: networktraffic_page
         NetworkTraffic {
-            showHeader: false
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    nodeSettingsView.pop()
-                }
-            }
-            navMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("Network traffic")
+            onBackClicked: {
+                nodeSettingsView.pop()
             }
         }
     }

@@ -28,7 +28,6 @@
         <file>controls/NavButton.qml</file>
         <file>controls/PageIndicator.qml</file>
         <file>controls/NavigationBar.qml</file>
-        <file>controls/NavigationBar2.qml</file>
         <file>controls/OptionButton.qml</file>
         <file>controls/OptionSwitch.qml</file>
         <file>controls/OutlineButton.qml</file>
@@ -52,6 +51,7 @@
         <file>pages/onboarding/OnboardingStorageAmount.qml</file>
         <file>pages/onboarding/OnboardingStorageLocation.qml</file>
         <file>pages/onboarding/OnboardingStrengthen.qml</file>
+        <file>pages/onboarding/OnboardingWizard.qml</file>
         <file>pages/settings/SettingsAbout.qml</file>
         <file>pages/settings/SettingsBlockClockDisplayMode.qml</file>
         <file>pages/settings/SettingsConnection.qml</file>

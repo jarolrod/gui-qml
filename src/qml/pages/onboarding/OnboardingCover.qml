@@ -9,16 +9,22 @@ import "../../controls"
 import "../../components"
 import "../settings"
 
-Page {
+Pane {
+    id: root
+    signal nextClicked
+
     background: null
-    clip: true
-    SwipeView {
-        id: introductions
+
+    contentItem: StackView {
+        id: onboarding_cover_view
         anchors.fill: parent
-        interactive: false
-        orientation: Qt.Horizontal
+        initialItem: cover_page
+    }
+
+    Component {
+        id: cover_page
         InformationPage {
-            navRightDetail: NavButton {
+            navRightItem: NavButton {
                 iconSource: "image://images/info"
                 iconHeight: 24
                 iconWidth: 24
@@ -28,7 +34,7 @@ Page {
                     color: Theme.color.neutral9
                 }
                 onClicked: {
-                    introductions.incrementCurrentIndex()
+                    onboarding_cover_view.push(about_settings)
                 }
             }
             bannerItem: Image {
@@ -48,14 +54,16 @@ Page {
             descriptionSize: 24
             subtext: qsTr("100% open-source & open-design")
             buttonText: qsTr("Start")
+
+            onNextClicked: root.nextClicked()
         }
+    }
+
+    Component {
+        id: about_settings
         SettingsAbout {
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    introductions.decrementCurrentIndex()
-                }
+            onBackClicked: {
+                onboarding_cover_view.pop()
             }
         }
     }

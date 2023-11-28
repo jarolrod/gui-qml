@@ -13,9 +13,9 @@ Page {
     property alias bannerItem: banner_loader.sourceComponent
     property alias detailItem: detail_loader.sourceComponent
     property alias loadedDetailItem: detail_loader.item
-    property alias navLeftDetail: navbar.leftDetail
-    property alias navMiddleDetail: navbar.middleDetail
-    property alias navRightDetail: navbar.rightDetail
+    property alias navLeftItem: navbar.leftItem
+    property alias navCenterItem: navbar.centerItem
+    property alias navRightItem: navbar.rightItem
     property string buttonText: ""
     property int buttonMargin: 40
     property bool bannerActive: true
@@ -37,6 +37,9 @@ Page {
     property int subtextSize: 15
     property real maximumWidth: 600
     property real detailMaximumWidth: 450
+
+    signal backClicked
+    signal nextClicked
 
     background: null
     clip: true
@@ -106,7 +109,7 @@ Page {
             anchors.rightMargin: 20
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.buttonText
-            onClicked: root.lastPage ? swipeView.finished = true : swipeView.incrementCurrentIndex()
+            onClicked: root.nextClicked()
         }
     }
 

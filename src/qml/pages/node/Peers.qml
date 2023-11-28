@@ -15,7 +15,7 @@ Page {
     id: root
     background: null
 
-    header: NavigationBar2 {
+    header: NavigationBar {
         leftItem: NavButton {
             iconSource: "image://images/caret-left"
             text: qsTr("Back")

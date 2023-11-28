@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2023 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,19 +9,26 @@ import "../../controls"
 import "../../components"
 import "../settings"
 
-Page {
+Pane {
+    id: root
+    signal backClicked()
+    signal nextClicked()
+
     background: null
-    clip: true
-    SwipeView {
-        id: storages
+
+    contentItem: StackView {
+        id: onboarding_storage_stack_view
         anchors.fill: parent
-        interactive: false
-        orientation: Qt.Vertical
+        initialItem: onboarding_storage_amount_page
+    }
+
+    Component {
+        id: onboarding_storage_amount_page
         InformationPage {
-            navLeftDetail: NavButton {
+            navLeftItem: NavButton {
                 iconSource: "image://images/caret-left"
                 text: qsTr("Back")
-                onClicked: swipeView.decrementCurrentIndex()
+                onClicked: root.backClicked()
             }
             bannerActive: false
             bold: true
@@ -42,20 +49,20 @@ Page {
                     Layout.topMargin: 10
                     Layout.alignment: Qt.AlignCenter
                     text: qsTr("Detailed settings")
-                    onClicked: storages.incrementCurrentIndex()
+                    onClicked: onboarding_storage_stack_view.push(advanced_storage_settings_page)
                 }
             }
             buttonText: qsTr("Next")
             buttonMargin: 20
+
+            onNextClicked: root.nextClicked()
         }
+    }
+
+    Component {
+        id: advanced_storage_settings_page
         SettingsStorage {
-            id: advancedStorage
-            navRightDetail: NavButton {
-                text: qsTr("Done")
-                onClicked: {
-                    storages.decrementCurrentIndex()
-                }
-            }
+            onBackClicked: onboarding_storage_stack_view.pop()
         }
     }
 }

@@ -8,13 +8,15 @@ import QtQuick.Layouts 1.15
 import "../../controls"
 import "../../components"
 
-Item {
+Pane {
     signal backClicked
+
+    background: null
 
     id: root
 
-    StackView {
-        id: displaySettingsView
+    contentItem: StackView {
+        id: display_settings_stack_view
         anchors.fill: parent
 
         initialItem: Page {
@@ -25,7 +27,7 @@ Item {
             rightPadding: 20
             topPadding: 30
 
-            header: NavigationBar2 {
+            header: NavigationBar {
                 leftItem: NavButton {
                     iconSource: "image://images/caret-left"
                     text: qsTr("Back")
@@ -49,7 +51,7 @@ Item {
                         color: gotoTheme.stateColor
                     }
                     onClicked: {
-                        nodeSettingsView.push(theme_page)
+                        display_settings_stack_view.push(theme_page)
                     }
                 }
                 Separator { Layout.fillWidth: true }
@@ -61,7 +63,7 @@ Item {
                         color: gotoBlockClockSize.stateColor
                     }
                     onClicked: {
-                        nodeSettingsView.push(blockclocksize_page)
+                        display_settings_stack_view.push(blockclocksize_page)
                     }
                 }
             }

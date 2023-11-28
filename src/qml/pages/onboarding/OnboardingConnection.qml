@@ -9,19 +9,26 @@ import "../../controls"
 import "../../components"
 import "../settings"
 
-Page {
+Pane {
+    id: root
+    signal backClicked
+    signal nextClicked
+
     background: null
-    clip: true
-    SwipeView {
-        id: connections
+
+    contentItem: StackView {
+        id: onboarding_connection_stack_view
         anchors.fill: parent
-        interactive: false
-        orientation: Qt.Vertical
+        initialItem: onboarding_connection_page
+    }
+
+    Component {
+        id: onboarding_connection_page
         InformationPage {
-            navLeftDetail: NavButton {
+            navLeftItem: NavButton {
                 iconSource: "image://images/caret-left"
                 text: qsTr("Back")
-                onClicked: swipeView.decrementCurrentIndex()
+                onClicked: root.backClicked()
             }
             bannerItem: Image {
                 Layout.topMargin: 20
@@ -41,19 +48,22 @@ Page {
                 TextButton {
                     Layout.alignment: Qt.AlignCenter
                     text: qsTr("Connection settings")
-                    onClicked: connections.incrementCurrentIndex()
+                    onClicked: onboarding_connection_stack_view.push(advanced_connection_settings)
                 }
             }
             lastPage: true
             buttonText: qsTr("Next")
             buttonMargin: 20
+
+            onNextClicked: root.nextClicked()
         }
+    }
+
+    Component {
+        id: advanced_connection_settings
         SettingsConnection {
-            navRightDetail: NavButton {
-                text: qsTr("Done")
-                onClicked: {
-                    connections.decrementCurrentIndex()
-                }
+            onBackClicked: {
+                onboarding_connection_stack_view.pop()
             }
         }
     }

@@ -13,7 +13,7 @@ Page {
     id: root
     background: null
     clip: true
-    header: NavigationBar2 {
+    header: NavigationBar {
         rightItem: NavButton {
             iconSource: "image://images/gear"
             iconHeight: 24

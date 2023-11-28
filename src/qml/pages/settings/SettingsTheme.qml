@@ -18,7 +18,7 @@ Page {
     rightPadding: 20
     topPadding: 30
 
-    header: NavigationBar2 {
+    header: NavigationBar {
         leftItem: NavButton {
             iconSource: "image://images/caret-left"
             text: qsTr("Back")
