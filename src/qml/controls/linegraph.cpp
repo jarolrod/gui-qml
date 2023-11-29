@@ -7,11 +7,11 @@
 #include <QBrush>
 #include <QColor>
 #include <QLinearGradient>
+#include <QList>
 #include <QObject>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPen>
-#include <QQueue>
 #include <QQuickPaintedItem>
 
 LineGraph::LineGraph(QQuickItem *parent)
@@ -61,9 +61,12 @@ void LineGraph::setMaxValue(float max_value)
     m_max_value = max_value;
 }
 
-void LineGraph::setValueList(QQueue<float> value_list)
+void LineGraph::setValueList(QList<float> * value_list)
 {
-    m_value_list = value_list;
+    if (value_list == nullptr) {
+        return;
+    }
+    m_value_list = *value_list;
     update();
 }
 

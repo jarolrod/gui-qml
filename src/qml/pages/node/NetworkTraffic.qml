@@ -129,10 +129,10 @@ InformationPage {
             fillColor: Theme.color.green
             lineColor: Theme.color.green
             markerLineColor: Theme.color.neutral2
-            maxSamples: root.trafficGraphScale
-            maxValue: networkTrafficTower.maxRecvRateBps
-            valueList: networkTrafficTower.recvRateList
-            maxRateBps: networkTrafficTower.maxRecvRateBps
+            maxSamples: networkTrafficTower.duration
+            maxValue: networkTrafficTower.durationMaxRecvRate
+            valueList: networkTrafficTower.durationRecvRateList
+            maxRateBps: networkTrafficTower.durationMaxRecvRate
         }
 
         TotalBytesIndicator {
@@ -148,10 +148,10 @@ InformationPage {
             fillColor: Theme.color.blue
             lineColor: Theme.color.blue
             markerLineColor: Theme.color.neutral2
-            maxSamples: root.trafficGraphScale
-            maxValue: networkTrafficTower.maxSentRateBps
-            valueList: networkTrafficTower.sentRateList
-            maxRateBps: networkTrafficTower.maxSentRateBps
+            maxSamples: networkTrafficTower.duration
+            maxValue: networkTrafficTower.durationMaxSentRate
+            valueList: networkTrafficTower.durationSentRateList
+            maxRateBps: networkTrafficTower.durationMaxSentRate
         }
     }
 

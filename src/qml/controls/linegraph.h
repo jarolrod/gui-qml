@@ -6,9 +6,9 @@
 #define BITCOIN_QML_CONTROLS_LINEGRAPH_H
 
 #include <QLinearGradient>
+#include <QList>
 #include <QPainter>
 #include <QPainterPath>
-#include <QQueue>
 #include <QQuickPaintedItem>
 
 class LineGraph : public QQuickPaintedItem
@@ -21,7 +21,7 @@ class LineGraph : public QQuickPaintedItem
     Q_PROPERTY(QColor markerLineColor READ markerLineColor WRITE setMarkerLineColor)
     Q_PROPERTY(int maxSamples READ maxSamples WRITE setMaxSamples)
     Q_PROPERTY(float maxValue READ maxValue WRITE setMaxValue)
-    Q_PROPERTY(QQueue<float> valueList READ valueList WRITE setValueList)
+    Q_PROPERTY(QList<float> valueList READ valueList WRITE setValueList)
 
     public:
         explicit LineGraph(QQuickItem * parent = nullptr);
@@ -34,7 +34,7 @@ class LineGraph : public QQuickPaintedItem
         QColor markerLineColor() const { return m_marker_line_color; };
         int maxSamples() const { return m_max_samples; };
         float maxValue() const { return m_max_value; };
-        QQueue<float> valueList() const { return m_value_list; };
+        QList<float> valueList() const { return m_value_list; };
 
     public Q_SLOTS:
         void setBackgroundColor(QColor color);
@@ -44,7 +44,7 @@ class LineGraph : public QQuickPaintedItem
         void setMarkerLineColor(QColor color);
         void setMaxSamples(int max_samples);
         void setMaxValue(float max_value);
-        void setValueList(QQueue<float> value_list);
+        void setValueList(QList<float> * value_list);
 
     private:
         void paintGraphBorder(QPainter * painter);
@@ -60,8 +60,8 @@ class LineGraph : public QQuickPaintedItem
         QColor m_line_color{"#000000"};
         QColor m_marker_line_color{"#000000"};
         int m_max_samples{0};
-        float m_max_value{0};
-        QQueue<float> m_value_list;
+        float m_max_value{0.0f};
+        QList<float> m_value_list{QList<float>()};
 };
 
 #endif // BITCOIN_QML_CONTROLS_LINEGRAPH_H
