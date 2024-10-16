@@ -12,12 +12,10 @@ import "../settings"
 Page {
     background: null
     clip: true
-    SwipeView {
+    PageStack {
         id: introductions
         anchors.fill: parent
-        interactive: false
-        orientation: Qt.Horizontal
-        InformationPage {
+        initialItem: InformationPage {
             navRightDetail: NavButton {
                 iconSource: "image://images/info"
                 iconHeight: 24
@@ -28,7 +26,7 @@ Page {
                     color: Theme.color.neutral9
                 }
                 onClicked: {
-                    introductions.incrementCurrentIndex()
+                    introductions.push(settingsPage)
                 }
             }
             bannerItem: Image {
@@ -49,12 +47,16 @@ Page {
             subtext: qsTr("100% open-source & open-design")
             buttonText: qsTr("Start")
         }
+    }
+
+    Component {
+        id: settingsPage
         SettingsAbout {
             navLeftDetail: NavButton {
                 iconSource: "image://images/caret-left"
                 text: qsTr("Back")
                 onClicked: {
-                    introductions.decrementCurrentIndex()
+                    introductions.pop()
                 }
             }
         }
