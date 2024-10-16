@@ -20,7 +20,7 @@ Page {
             iconSource: "image://images/caret-left"
             text: qsTr("Back")
             onClicked: {
-                root.StackView.view.pop()
+                root.PageStack.view.pop()
             }
         }
     }
@@ -83,7 +83,7 @@ Page {
             Layout.alignment: Qt.AlignCenter
             text: qsTr("Done")
             onClicked: {
-                root.StackView.view.finished()
+                root.PageStack.view.finished()
             }
         }
     }

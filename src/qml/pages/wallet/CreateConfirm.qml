@@ -20,7 +20,7 @@ Page {
             iconSource: "image://images/caret-left"
             text: qsTr("Back")
             onClicked: {
-                root.StackView.view.pop()
+                root.PageStack.view.pop()
             }
         }
     }
@@ -67,7 +67,7 @@ Page {
             Layout.alignment: Qt.AlignCenter
             text: qsTr("Next")
             onClicked: {
-                root.StackView.view.push("qrc:/qml/pages/wallet/CreateBackup.qml")
+                root.PageStack.view.push("qrc:/qml/pages/wallet/CreateBackup.qml")
             }
         }
     }
