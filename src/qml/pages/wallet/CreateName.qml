@@ -20,7 +20,7 @@ Page {
             iconSource: "image://images/caret-left"
             text: qsTr("Back")
             onClicked: {
-                root.StackView.view.pop()
+                root.PageView.view.pop()
             }
         }
     }
@@ -62,7 +62,7 @@ Page {
             text: qsTr("Continue")
             onClicked: {
                 console.log("Creating wallet with name: " + walletNameInput.text)
-                root.StackView.view.push(createPassword)
+                root.PageView.view.push(createPassword)
             }
         }
 

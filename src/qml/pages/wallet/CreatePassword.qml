@@ -22,14 +22,14 @@ Page {
             iconSource: "image://images/caret-left"
             text: qsTr("Back")
             onClicked: {
-                root.StackView.view.pop()
+                root.PageView.view.pop()
             }
         }
         rightItem: NavButton {
             text: qsTr("Skip")
             onClicked: {
                 walletController.createSingleSigWallet(walletName, "")
-                root.StackView.view.push("qrc:/qml/pages/wallet/CreateConfirm.qml")
+                root.PageView.view.push("qrc:/qml/pages/wallet/CreateConfirm.qml")
             }
         }
     }
@@ -108,7 +108,7 @@ Page {
             enabled: password.text != "" && passwordRepeat.text != "" && password.text == passwordRepeat.text && confirmToggle.loadedItem.checked
             onClicked: {
                 walletController.createSingleSigWallet(walletName, password.text)
-                root.StackView.view.push("qrc:/qml/pages/wallet/CreateConfirm.qml")
+                root.PageView.view.push("qrc:/qml/pages/wallet/CreateConfirm.qml")
             }
         }
     }

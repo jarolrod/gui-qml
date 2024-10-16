@@ -10,7 +10,7 @@ import "../../components"
 import "../settings"
 import "../wallet"
 
-StackView {
+PageView {
     id: addWalletStack
 
     signal finished()

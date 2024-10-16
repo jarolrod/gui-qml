@@ -13,7 +13,7 @@ Item {
 
     id: root
 
-    StackView {
+    PageView {
         id: displaySettingsView
         anchors.fill: parent
 
