@@ -12,12 +12,11 @@ import "../settings"
 Page {
     background: null
     clip: true
-    SwipeView {
+    PageStack {
         id: connections
         anchors.fill: parent
-        interactive: false
-        orientation: Qt.Vertical
-        InformationPage {
+        vertical: true
+        initialItem: InformationPage {
             navLeftDetail: NavButton {
                 iconSource: "image://images/caret-left"
                 text: qsTr("Back")
@@ -41,18 +40,21 @@ Page {
                 TextButton {
                     Layout.alignment: Qt.AlignCenter
                     text: qsTr("Connection settings")
-                    onClicked: connections.incrementCurrentIndex()
+                    onClicked: connections.push(settingsConnectionsPage)
                 }
             }
             lastPage: true
             buttonText: qsTr("Next")
             buttonMargin: 20
         }
+    }
+    Component {
+        id: settingsConnectionsPage
         SettingsConnection {
             navRightDetail: NavButton {
                 text: qsTr("Done")
                 onClicked: {
-                    connections.decrementCurrentIndex()
+                    connections.pop()
                 }
             }
         }
