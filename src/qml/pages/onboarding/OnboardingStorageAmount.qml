@@ -12,12 +12,10 @@ import "../settings"
 Page {
     background: null
     clip: true
-    SwipeView {
+    PageStack {
         id: storages
         anchors.fill: parent
-        interactive: false
-        orientation: Qt.Vertical
-        InformationPage {
+        initialItem: InformationPage {
             navLeftDetail: NavButton {
                 iconSource: "image://images/caret-left"
                 text: qsTr("Back")
@@ -33,8 +31,8 @@ Page {
             detailItem: ColumnLayout {
                 spacing: 0
                 StorageOptions {
-                    customStorage: advancedStorage.loadedDetailItem.customStorage
-                    customStorageAmount: advancedStorage.loadedDetailItem.customStorageAmount
+                    customStorage: true //advanced.customStorage
+                    customStorageAmount: 10 //advanced.customStorageAmount
                     Layout.maximumWidth: 450
                     Layout.alignment: Qt.AlignCenter
                 }
@@ -42,18 +40,22 @@ Page {
                     Layout.topMargin: 10
                     Layout.alignment: Qt.AlignCenter
                     text: qsTr("Detailed settings")
-                    onClicked: storages.incrementCurrentIndex()
+                    onClicked: storages.push(advanced)
                 }
             }
             buttonText: qsTr("Next")
             buttonMargin: 20
-        }
-        SettingsStorage {
-            id: advancedStorage
-            navRightDetail: NavButton {
-                text: qsTr("Done")
-                onClicked: {
-                    storages.decrementCurrentIndex()
+        } 
+ 
+        Component {
+            id: advanced
+            SettingsStorage {
+                id: storage
+                navRightDetail: NavButton {
+                    text: qsTr("Done")
+                    onClicked: {
+                        storages.pop()
+                    }
                 }
             }
         }
