@@ -51,11 +51,9 @@ Page {
     Component {
         id: settingsConnectionsPage
         SettingsConnection {
-            navRightDetail: NavButton {
-                text: qsTr("Done")
-                onClicked: {
-                    connections.pop()
-                }
+            onboarding: true
+            onDoneClicked: {
+                connections.pop()
             }
         }
     }

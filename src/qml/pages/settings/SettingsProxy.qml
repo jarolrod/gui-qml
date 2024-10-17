@@ -9,10 +9,9 @@ import "../../controls"
 import "../../components"
 
 Page {
-    signal backClicked
-
     id: root
-
+    signal backClicked
+    property bool onboarding: false
     background: null
     implicitWidth: 450
     leftPadding: 20

@@ -156,18 +156,8 @@ Item {
     Component {
         id: connection_page
         SettingsConnection {
-            showHeader: false
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    nodeSettingsView.pop()
-                }
-            }
-            navMiddleDetail: Header {
-                headerBold: true
-                headerSize: 18
-                header: qsTr("Connection settings")
+            onBackClicked: {
+                nodeSettingsView.pop()
             }
         }
     }

@@ -8,35 +8,58 @@ import QtQuick.Layouts 1.15
 import "../../controls"
 import "../../components"
 
-Item {
-    property alias navRightDetail: connectionSwipe.navRightDetail
-    property alias navMiddleDetail: connectionSwipe.navMiddleDetail
-    property alias navLeftDetail: connectionSwipe.navLeftDetail
-    property alias showHeader: connectionSwipe.showHeader
-    SwipeView {
-        id: connectionSwipe
-        property alias navRightDetail: connection_settings.navRightDetail
-        property alias navMiddleDetail: connection_settings.navMiddleDetail
-        property alias navLeftDetail: connection_settings.navLeftDetail
-        property alias showHeader: connection_settings.showHeader
+Page {
+    id: root
+    signal backClicked
+    signal doneClicked
+    property bool onboarding: false
+    background: null
+    clip: true
+
+    PageStack {
+        id: connectionSettingsStack
         anchors.fill: parent
-        interactive: false
-        orientation: Qt.Horizontal
-        InformationPage {
-            id: connection_settings
-            background: null
-            clip: true
-            bannerActive: false
-            bold: true
-            headerText: qsTr("Connection settings")
-            headerMargin: 0
-            detailActive: true
-            detailItem: ConnectionSettings {}
+        initialItem: connectionSettings
+        
+        Component {
+            id: connectionSettings
+            InformationPage {
+                navLeftDetail: NavButton {
+                    iconSource: "image://images/caret-left"
+                    text: qsTr("Back")
+                    onClicked: root.backClicked()
+                }
+                navMiddleDetail: NavButton {
+                    text: qsTr("Cancel")
+                }
+                navRightDetail: NavButton {
+                    text: qsTr("Done")
+                    onClicked: root.doneClicked()
+                }
+                background: null
+                clip: true
+                bannerActive: false
+                bold: true
+                showHeader: root.onboarding
+                headerText: qsTr("Connection settings")
+                headerMargin: 0
+                detailActive: true
+                detailItem: ConnectionSettings {
+                    onGoToProxy: {
+                        connectionSettingsStack.push(proxySettings)
+                    }
+                }
+            }
         }
-        SettingsProxy {
-            onBackClicked: {
-                connectionSwipe.decrementCurrentIndex()
+}
+    
+        Component {
+            id: proxySettings
+            SettingsProxy {
+                onboarding: root.onboarding
+                onBackClicked: {
+                    connectionSettingsStack.pop()
+                }
             }
         }
     }
-}
