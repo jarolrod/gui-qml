@@ -26,7 +26,7 @@ Page {
                     color: Theme.color.neutral9
                 }
                 onClicked: {
-                    introductions.push(settingsPage)
+                    introductions.push(aboutSettings)
                 }
             }
             bannerItem: Image {
@@ -50,14 +50,11 @@ Page {
     }
 
     Component {
-        id: settingsPage
+        id: aboutSettings
         SettingsAbout {
-            navLeftDetail: NavButton {
-                iconSource: "image://images/caret-left"
-                text: qsTr("Back")
-                onClicked: {
-                    introductions.pop()
-                }
+            onboarding: true
+            onBackClicked: {
+                introductions.pop()
             }
         }
     }

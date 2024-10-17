@@ -9,8 +9,22 @@ import "../../controls"
 import "../../components"
 
 InformationPage {
+    id: root
+    signal backClicked
+    property bool onboarding: false
+    navLeftDetail: NavButton {
+        iconSource: "image://images/caret-left"
+        text: qsTr("Back")
+        onClicked: root.backClicked()
+    }
+    navMiddleDetail: Header {
+        headerBold: true
+        headerSize: 18
+        header: qsTr("Developer options")
+    }
     bannerActive: false
     bold: true
+    showHeader: root.onboarding
     headerText: qsTr("Developer options")
     headerMargin: 0
     detailActive: true

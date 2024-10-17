@@ -8,6 +8,8 @@ import QtQuick.Layouts 1.15
 import "../controls"
 
 ColumnLayout {
+    id: root
+    signal goToDeveloper
     spacing: 4
     Setting {
         id: websiteLink
@@ -68,9 +70,7 @@ ColumnLayout {
         actionItem: CaretRightIcon {
             color: gotoDeveloper.stateColor
         }
-        onClicked: {
-            aboutSwipe.incrementCurrentIndex()
-        }
+        onClicked: root.goToDeveloper()
     }
     ExternalPopup {
         id: confirmPopup
