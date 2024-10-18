@@ -10,6 +10,8 @@ import "../../components"
 import "../settings"
 
 Page {
+    id: root
+    signal next
     background: null
     clip: true
     PageStack {
@@ -46,6 +48,7 @@ Page {
             descriptionSize: 24
             subtext: qsTr("100% open-source & open-design")
             buttonText: qsTr("Start")
+            onNext: root.next()
         }
     }
 

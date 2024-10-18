@@ -65,19 +65,8 @@ ApplicationWindow {
 
     Component {
         id: onboardingWizard
-        SwipeView {
-            id: swipeView
-            property bool finished: false
-            interactive: false
-
-            OnboardingCover {}
-            OnboardingStrengthen {}
-            OnboardingBlockclock {}
-            OnboardingStorageLocation {}
-            OnboardingStorageAmount {}
-            OnboardingConnection {}
-
-            onFinishedChanged: {
+        OnboardingWizard {
+            onFinished: {
                 optionsModel.onboard()
                 if (AppMode.walletEnabled && AppMode.isDesktop) {
                     main.push(desktopWallets)

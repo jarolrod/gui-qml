@@ -10,16 +10,20 @@ import "../../components"
 import "../settings"
 
 Page {
+    id: root
+    signal back
+    signal next
     background: null
     clip: true
     PageStack {
         id: storages
         anchors.fill: parent
+        vertical: true
         initialItem: InformationPage {
             navLeftDetail: NavButton {
                 iconSource: "image://images/caret-left"
                 text: qsTr("Back")
-                onClicked: swipeView.decrementCurrentIndex()
+                onClicked: root.back()
             }
             bannerActive: false
             bold: true
@@ -45,6 +49,7 @@ Page {
             }
             buttonText: qsTr("Next")
             buttonMargin: 20
+            onNext: root.next()
         } 
  
         Component {

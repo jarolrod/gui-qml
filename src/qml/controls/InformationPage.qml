@@ -9,6 +9,7 @@ import org.bitcoincore.qt 1.0
 
 Page {
     id: root
+    signal next
     implicitHeight: information.height + continueButton.height + buttonMargin
     property alias bannerItem: banner_loader.sourceComponent
     property alias detailItem: detail_loader.sourceComponent
@@ -106,7 +107,7 @@ Page {
             anchors.rightMargin: 20
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.buttonText
-            onClicked: root.lastPage ? swipeView.finished = true : swipeView.incrementCurrentIndex()
+            onClicked: root.next()
         }
     }
 

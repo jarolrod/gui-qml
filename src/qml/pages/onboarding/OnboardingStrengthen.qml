@@ -8,10 +8,12 @@ import QtQuick.Layouts 1.15
 import "../../controls"
 
 InformationPage {
+    id: root
+    signal back
     navLeftDetail: NavButton {
         iconSource: "image://images/caret-left"
         text: qsTr("Back")
-        onClicked: swipeView.decrementCurrentIndex()
+        onClicked: root.back()
     }
     bannerItem: Image {
         source: Theme.image.network
