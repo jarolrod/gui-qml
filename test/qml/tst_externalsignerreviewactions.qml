@@ -121,6 +121,30 @@ TestCase {
         verify(!button.enabled)
     }
 
+    function test_sign_only_flow_uses_signing_copy() {
+        const wallet = createTemporaryObject(walletComponent, this)
+        verify(wallet !== null)
+
+        const review = createTemporaryObject(reviewComponent, this, {wallet: wallet, signOnly: true, canSend: false, canApprove: true})
+        verify(review !== null)
+
+        const button = findObjectByName(review, "externalSignerApproveButton")
+        verify(button !== null)
+
+        compare(review.reviewState, "initial")
+        compare(review.statusText, "Approve on external signer to sign this transaction.")
+        compare(review.buttonText, "Approve on external signer")
+        verify(button.enabled)
+
+        review.beginApproval()
+        waitForApproveCalls(wallet, 1)
+        wallet.externalSignerApprovalSucceeded()
+
+        compare(review.reviewState, "signed")
+        compare(review.statusText, "Signed on external signer. Ready to broadcast.")
+        compare(review.buttonText, "Ready to broadcast")
+    }
+
     function test_error_state_retries_approval() {
         const wallet = createTemporaryObject(walletComponent, this)
         verify(wallet !== null)

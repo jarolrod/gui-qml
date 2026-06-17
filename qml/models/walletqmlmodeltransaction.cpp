@@ -103,6 +103,15 @@ CAmount WalletQmlModelTransaction::getTotalTransactionAmount() const
     return m_amount + m_fee;
 }
 
+void WalletQmlModelTransaction::setTransactionAmount(const CAmount& newAmount)
+{
+    if (m_amount != newAmount) {
+        m_amount = newAmount;
+        m_amount_amount->setSatoshi(m_amount);
+        m_total_amount->setSatoshi(m_amount + m_fee);
+    }
+}
+
 void WalletQmlModelTransaction::setTransactionFee(const CAmount& newFee)
 {
     if (m_fee != newFee) {

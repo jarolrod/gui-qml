@@ -31,6 +31,7 @@
 #include <vector>
 
 #include <QHash>
+#include <QAbstractListModel>
 #include <QObject>
 #include <QStringList>
 #include <QThread>
@@ -61,6 +62,8 @@ public:
         WalletCanSign,
         WalletCannotSign,
         TransactionAlreadyKnown,
+        WalletCanSignPsbt,
+        PsbtImportedForReview,
     };
     Q_ENUM(PsbtImportResult)
 
@@ -101,7 +104,10 @@ private:
     Q_PROPERTY(bool transactionNeedsUnlock READ transactionNeedsUnlock NOTIFY transactionNeedsUnlockChanged)
     Q_PROPERTY(bool currentTransactionCanSend READ currentTransactionCanSend NOTIFY currentTransactionChanged)
     Q_PROPERTY(bool currentTransactionCanBroadcast READ currentTransactionCanBroadcast NOTIFY currentTransactionChanged)
+    Q_PROPERTY(bool currentTransactionCanSign READ currentTransactionCanSign NOTIFY currentTransactionChanged)
     Q_PROPERTY(QString currentTransactionReviewMessage READ currentTransactionReviewMessage NOTIFY currentTransactionChanged)
+    Q_PROPERTY(QAbstractListModel* currentPsbtOutputs READ currentPsbtOutputs NOTIFY currentTransactionChanged)
+    Q_PROPERTY(int currentPsbtOutputCount READ currentPsbtOutputCount NOTIFY currentTransactionChanged)
     Q_PROPERTY(QString settingsError READ settingsError NOTIFY settingsErrorChanged)
     Q_PROPERTY(PsbtQmlModel* importedPsbt READ importedPsbt CONSTANT)
 
@@ -149,6 +155,8 @@ public:
     Q_INVOKABLE bool sendTransaction();
     Q_INVOKABLE bool sendTransactionWithPassphrase(const QString& passphrase);
     Q_INVOKABLE bool broadcastCurrentTransaction();
+    Q_INVOKABLE bool signCurrentPsbt();
+    Q_INVOKABLE bool signCurrentPsbtWithPassphrase(const QString& passphrase);
     Q_INVOKABLE QVariantList availableReceiveAddressTypes() const;
     Q_INVOKABLE QString defaultReceiveAddressType() const;
     Q_INVOKABLE QString estimatedFeeForTarget(unsigned int target_blocks) const;
@@ -223,7 +231,10 @@ public:
     bool transactionNeedsUnlock() const { return m_transaction_needs_unlock; }
     bool currentTransactionCanSend() const { return m_current_transaction && m_current_transaction_can_send; }
     bool currentTransactionCanBroadcast() const { return m_current_transaction && m_current_transaction_can_broadcast; }
+    bool currentTransactionCanSign() const { return m_current_transaction && m_current_transaction_can_sign; }
     QString currentTransactionReviewMessage() const { return m_current_transaction_review_message; }
+    QAbstractListModel* currentPsbtOutputs() const { return m_current_psbt_outputs_model; }
+    int currentPsbtOutputCount() const;
     QString settingsError() const { return m_settings_error; }
     void setNode(interfaces::Node* node);
 
@@ -253,6 +264,8 @@ Q_SIGNALS:
     void addressListChanged();
 
 private:
+    struct ImportedPsbtSession;
+
     void initializeFeeEstimator();
     void requestFeeEstimatesNow();
     void applyFeeEstimates(const QHash<unsigned int, CAmount>& estimates,
@@ -268,6 +281,7 @@ private:
     bool ensurePaymentRequestDestination();
     bool saveCurrentPaymentRequest();
     bool sendTransactionInternal(std::optional<SecureString> passphrase = std::nullopt);
+    bool signCurrentPsbtInternal(std::optional<SecureString> passphrase = std::nullopt);
     bool unlockForAction(std::optional<SecureString>& passphrase, bool& relock);
     void clearTransactionStatus();
     void setTransactionStatus(const QString& error, bool needs_unlock = false);
@@ -287,10 +301,14 @@ private:
     PaymentRequest* m_detail_payment_request{nullptr};
     ReceiveRequestHistoryModel* m_receive_requests{nullptr};
     WalletQmlModelTransaction* m_current_transaction{nullptr};
+    QAbstractListModel* m_current_psbt_outputs_model{nullptr};
     wallet::CCoinControl m_coin_control;
+    std::unique_ptr<ImportedPsbtSession> m_imported_psbt_session;
     std::unique_ptr<PartiallySignedTransaction> m_current_psbt;
+    std::unique_ptr<PartiallySignedTransaction> m_current_psbt_save_copy;
     bool m_current_transaction_can_send{false};
     bool m_current_transaction_can_broadcast{false};
+    bool m_current_transaction_can_sign{false};
     QString m_current_transaction_review_message;
     QObject* m_fee_estimation_worker{nullptr};
     QThread* m_fee_estimation_thread{nullptr};

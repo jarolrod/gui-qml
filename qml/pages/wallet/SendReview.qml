@@ -22,16 +22,21 @@ Page {
     property bool sending: false
     property string savePsbtStatus: ""
     property bool savePsbtError: false
+    property string passphraseAction: "send"
 
     readonly property int recipientCount: wallet ? wallet.recipients.count : 0
-    readonly property bool multipleRecipients: recipientCount > 1
+    readonly property int psbtOutputCount: wallet ? wallet.currentPsbtOutputCount : 0
+    readonly property bool hasPsbtOutputs: psbtOutputCount > 0
+    readonly property int reviewItemCount: hasPsbtOutputs ? psbtOutputCount : recipientCount
+    readonly property bool multipleRecipients: reviewItemCount > 1
     readonly property bool isWatchOnly: wallet && wallet.keySchemeKind === WalletQmlModel.WatchOnly
     readonly property bool canSendTransaction: wallet ? wallet.currentTransactionCanSend : false
     readonly property bool canBroadcastTransaction: wallet ? wallet.currentTransactionCanBroadcast : false
+    readonly property bool canSignTransaction: wallet ? wallet.currentTransactionCanSign : false
     readonly property bool reviewWarningVisible: wallet ? wallet.currentTransactionReviewMessage.length > 0 : false
-    readonly property string recipientCountText: recipientCount === 1
-        ? qsTr("There is 1 recipient.")
-        : qsTr("There are %1 recipients.").arg(recipientCount)
+    readonly property string recipientCountText: hasPsbtOutputs
+        ? (psbtOutputCount === 1 ? qsTr("There is 1 output.") : qsTr("There are %1 outputs.").arg(psbtOutputCount))
+        : (recipientCount === 1 ? qsTr("There is 1 recipient.") : qsTr("There are %1 recipients.").arg(recipientCount))
 
     signal finished()
     signal back()
@@ -45,6 +50,20 @@ Page {
             root.sending = true
             root.transactionSent()
         } else if (root.wallet && root.wallet.transactionNeedsUnlock) {
+            root.passphraseAction = "send"
+            sendPassphrasePopup.errorText = ""
+            sendPassphrasePopup.open()
+        }
+    }
+
+    function commitSign() {
+        if (root.sending) {
+            return
+        }
+        if (root.wallet && root.wallet.signCurrentPsbt()) {
+            return
+        } else if (root.wallet && root.wallet.transactionNeedsUnlock) {
+            root.passphraseAction = "sign"
             sendPassphrasePopup.errorText = ""
             sendPassphrasePopup.open()
         }
@@ -197,7 +216,7 @@ Page {
             Loader {
                 id: bodyLoader
                 Layout.fillWidth: true
-                sourceComponent: root.multipleRecipients ? multipleBody : singleBody
+                sourceComponent: root.hasPsbtOutputs ? psbtOutputsBody : (root.multipleRecipients ? multipleBody : singleBody)
             }
 
             Component {
@@ -217,11 +236,22 @@ Page {
                 }
             }
 
+            Component {
+                id: psbtOutputsBody
+                PsbtOutputsSummary {
+                    outputModel: root.wallet ? root.wallet.currentPsbtOutputs : null
+                    transaction: root.transaction
+                }
+            }
+
             ExternalSignerReviewActions {
                 id: externalSignerActions
-                visible: !root.inspectionMode && root.wallet && root.wallet.hasExternalSigner
+                visible: root.wallet && root.wallet.hasExternalSigner
+                    && (root.canSendTransaction || root.canSignTransaction || reviewState === "waiting" || reviewState === "error" || reviewState === "partiallySigned")
                 wallet: root.wallet
                 canSend: root.canSendTransaction
+                canApprove: root.canSendTransaction || root.canSignTransaction
+                signOnly: root.inspectionMode && root.canSignTransaction
                 buttonObjectName: "sendReviewExternalSignerButton"
                 statusObjectName: "sendReviewStatusText"
                 Layout.fillWidth: true
@@ -241,6 +271,17 @@ Page {
             }
 
             ContinueButton {
+                id: signButton
+                objectName: "sendReviewSignPsbtButton"
+                visible: root.inspectionMode && root.canSignTransaction && (!root.wallet || !root.wallet.hasExternalSigner)
+                enabled: !root.sending
+                Layout.fillWidth: true
+                Layout.topMargin: 30
+                text: qsTr("Sign transaction")
+                onClicked: root.commitSign()
+            }
+
+            ContinueButton {
                 id: broadcastButton
                 objectName: "sendReviewBroadcastButton"
                 visible: root.inspectionMode && root.canBroadcastTransaction
@@ -254,7 +295,7 @@ Page {
             OutlineButton {
                 id: savePsbtButton
                 objectName: "sendReviewSavePsbtButton"
-                visible: confirmationButton.visible || externalSignerActions.visible || root.inspectionMode || root.isWatchOnly
+                visible: confirmationButton.visible || signButton.visible || externalSignerActions.visible || root.inspectionMode || root.isWatchOnly
                 enabled: root.wallet && root.wallet.currentTransaction && !root.sending
                 Layout.fillWidth: true
                 Layout.topMargin: 10
@@ -300,16 +341,23 @@ Page {
         cancelButtonObjectName: "sendReviewPassphraseCancelButton"
         confirmButtonObjectName: "sendReviewPassphraseConfirmButton"
         titleText: qsTr("Enter wallet password")
-        descriptionText: qsTr("Enter your wallet password to send this transaction.")
-        confirmText: qsTr("Unlock and send")
+        descriptionText: root.passphraseAction === "sign"
+            ? qsTr("Enter your wallet password to sign this transaction.")
+            : qsTr("Enter your wallet password to send this transaction.")
+        confirmText: root.passphraseAction === "sign" ? qsTr("Unlock and sign") : qsTr("Unlock and send")
         busyConfirmText: qsTr("Unlocking...")
         onSubmitted: (passphrase) => {
             sendPassphrasePopup.busy = true
-            if (root.wallet.sendTransactionWithPassphrase(passphrase)) {
+            const succeeded = root.passphraseAction === "sign"
+                ? root.wallet.signCurrentPsbtWithPassphrase(passphrase)
+                : root.wallet.sendTransactionWithPassphrase(passphrase)
+            if (succeeded) {
                 sendPassphrasePopup.busy = false
                 sendPassphrasePopup.close()
-                root.sending = true
-                root.transactionSent()
+                if (root.passphraseAction !== "sign") {
+                    root.sending = true
+                    root.transactionSent()
+                }
                 return
             }
             sendPassphrasePopup.busy = false

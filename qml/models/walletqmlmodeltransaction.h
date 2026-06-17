@@ -36,6 +36,7 @@ public:
     CTransactionRef& getWtx();
     void setWtx(const CTransactionRef&);
 
+    void setTransactionAmount(const CAmount& newAmount);
     void setTransactionFee(const CAmount& newFee);
     CAmount getTransactionFee() const;
 

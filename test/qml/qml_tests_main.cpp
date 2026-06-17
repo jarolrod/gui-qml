@@ -806,12 +806,16 @@ class MockWalletQmlModel : public QObject
     Q_PROPERTY(QObject* currentTransaction READ currentTransaction CONSTANT)
     Q_PROPERTY(bool currentTransactionCanSend MEMBER m_current_transaction_can_send NOTIFY currentTransactionChanged)
     Q_PROPERTY(bool currentTransactionCanBroadcast MEMBER m_current_transaction_can_broadcast NOTIFY currentTransactionChanged)
+    Q_PROPERTY(bool currentTransactionCanSign MEMBER m_current_transaction_can_sign NOTIFY currentTransactionChanged)
+    Q_PROPERTY(int currentPsbtOutputCount MEMBER m_current_psbt_output_count NOTIFY currentTransactionChanged)
+    Q_PROPERTY(QObject* currentPsbtOutputs READ currentPsbtOutputs CONSTANT)
     Q_PROPERTY(QString currentTransactionReviewMessage MEMBER m_current_transaction_review_message NOTIFY currentTransactionChanged)
     Q_PROPERTY(QObject* currentPaymentRequest READ currentPaymentRequest CONSTANT)
     Q_PROPERTY(QObject* detailPaymentRequest READ detailPaymentRequest CONSTANT)
     Q_PROPERTY(QObject* receiveRequests READ receiveRequests CONSTANT)
     Q_PROPERTY(MockAddressListModel* addressListModel READ addressListModel CONSTANT)
     Q_PROPERTY(bool hasExternalSigner MEMBER m_has_external_signer NOTIFY walletInfoChanged)
+    Q_PROPERTY(KeyScheme keySchemeKind MEMBER m_key_scheme_kind NOTIFY walletInfoChanged)
     Q_PROPERTY(int displayUnit MEMBER m_display_unit NOTIFY displayUnitChanged)
     Q_PROPERTY(int targetBlocks READ targetBlocks WRITE setTargetBlocks NOTIFY targetBlocksChanged)
     Q_PROPERTY(QString estimatedFee READ estimatedFee NOTIFY feeEstimateRevisionChanged)
@@ -826,6 +830,12 @@ class MockWalletQmlModel : public QObject
     Q_PROPERTY(int prepareTransactionCalls READ prepareTransactionCalls NOTIFY prepareTransactionCallsChanged)
     Q_PROPERTY(int scheduleFeeEstimatesCalls READ scheduleFeeEstimatesCalls NOTIFY scheduleFeeEstimatesCallsChanged)
     Q_PROPERTY(int sendTransactionCalls READ sendTransactionCalls NOTIFY sendTransactionCallsChanged)
+    Q_PROPERTY(bool signCurrentPsbtResult MEMBER m_sign_current_psbt_result NOTIFY signCurrentPsbtResultChanged)
+    Q_PROPERTY(bool signCurrentPsbtNeedsUnlock MEMBER m_sign_current_psbt_needs_unlock NOTIFY signCurrentPsbtResultChanged)
+    Q_PROPERTY(bool signCurrentPsbtEnablesBroadcast MEMBER m_sign_current_psbt_enables_broadcast NOTIFY signCurrentPsbtResultChanged)
+    Q_PROPERTY(int signCurrentPsbtCalls READ signCurrentPsbtCalls NOTIFY signCurrentPsbtCallsChanged)
+    Q_PROPERTY(int signCurrentPsbtWithPassphraseCalls READ signCurrentPsbtWithPassphraseCalls NOTIFY signCurrentPsbtCallsChanged)
+    Q_PROPERTY(QString lastSignCurrentPsbtPassphrase READ lastSignCurrentPsbtPassphrase NOTIFY signCurrentPsbtCallsChanged)
     Q_PROPERTY(int broadcastCurrentTransactionCalls READ broadcastCurrentTransactionCalls NOTIFY broadcastCurrentTransactionCallsChanged)
     Q_PROPERTY(int discardCurrentTransactionCalls READ discardCurrentTransactionCalls NOTIFY discardCurrentTransactionCallsChanged)
     Q_PROPERTY(bool isEncrypted MEMBER m_is_encrypted NOTIFY securityStateChanged)
@@ -846,6 +856,25 @@ class MockWalletQmlModel : public QObject
     Q_PROPERTY(QString lastRemovedRequestId MEMBER m_last_removed_request_id NOTIFY lastRemovedRequestIdChanged)
 
 public:
+    enum class KeyScheme {
+        SingleKey = 0,
+        WatchOnly,
+        MultiKey,
+        ExternalSigner,
+    };
+    Q_ENUM(KeyScheme)
+
+    enum class PsbtImportResult {
+        Invalid = 0,
+        WalletCanSign,
+        WalletCannotSign,
+        TransactionAlreadyKnown,
+        WalletCanSignPsbt,
+        PsbtImportedForReview,
+        PsbtUnsupported,
+    };
+    Q_ENUM(PsbtImportResult)
+
     QString m_name{QStringLiteral("testwallet")};
     QString m_balance{QStringLiteral("1.00000000 BTC")};
     QObject* m_activity_list_model{nullptr};
@@ -872,13 +901,17 @@ public:
     bool m_prepare_transaction_result{true};
     bool m_current_transaction_can_send{true};
     bool m_current_transaction_can_broadcast{false};
+    bool m_current_transaction_can_sign{false};
+    int m_current_psbt_output_count{0};
     QString m_current_transaction_review_message;
+    KeyScheme m_key_scheme_kind{KeyScheme::SingleKey};
 
     QObject* activityListModel() const { return m_activity_list_model; }
     QObject* bumpModel() const { return m_bump_model; }
     QObject* recipients() const { return m_recipients; }
     QObject* coinsListModel() const { return m_coins_list_model; }
     QObject* currentTransaction() const { return m_current_transaction; }
+    QObject* currentPsbtOutputs() const { return nullptr; }
     QObject* currentPaymentRequest() const { return m_current_payment_request; }
     QObject* detailPaymentRequest() const { return m_current_payment_request; }
     QObject* receiveRequests() { return &m_receive_requests; }
@@ -921,6 +954,9 @@ public:
     int prepareTransactionCalls() const { return m_prepare_transaction_calls; }
     int scheduleFeeEstimatesCalls() const { return m_schedule_fee_estimates_calls; }
     int sendTransactionCalls() const { return m_send_transaction_calls; }
+    int signCurrentPsbtCalls() const { return m_sign_current_psbt_calls; }
+    int signCurrentPsbtWithPassphraseCalls() const { return m_sign_current_psbt_with_passphrase_calls; }
+    QString lastSignCurrentPsbtPassphrase() const { return m_last_sign_current_psbt_passphrase; }
     int broadcastCurrentTransactionCalls() const { return m_broadcast_current_transaction_calls; }
     int discardCurrentTransactionCalls() const { return m_discard_current_transaction_calls; }
     bool sendAmountExhaustsBalance() const { return m_send_amount_exhausts_balance; }
@@ -1073,6 +1109,35 @@ public:
         }
         return m_send_transaction_result;
     }
+    Q_INVOKABLE bool signCurrentPsbt()
+    {
+        ++m_sign_current_psbt_calls;
+        Q_EMIT signCurrentPsbtCallsChanged();
+        if (m_sign_current_psbt_needs_unlock) {
+            setTransactionStatus(QStringLiteral("Enter your wallet password to sign this transaction."), true);
+            return false;
+        }
+        if (m_sign_current_psbt_result) {
+            m_current_transaction_can_sign = false;
+            m_current_transaction_can_broadcast = m_sign_current_psbt_enables_broadcast;
+            setTransactionStatus({}, false);
+            Q_EMIT currentTransactionChanged();
+        }
+        return m_sign_current_psbt_result;
+    }
+    Q_INVOKABLE bool signCurrentPsbtWithPassphrase(const QString& passphrase)
+    {
+        ++m_sign_current_psbt_with_passphrase_calls;
+        m_last_sign_current_psbt_passphrase = passphrase;
+        Q_EMIT signCurrentPsbtCallsChanged();
+        if (m_sign_current_psbt_result) {
+            m_current_transaction_can_sign = false;
+            m_current_transaction_can_broadcast = m_sign_current_psbt_enables_broadcast;
+            setTransactionStatus({}, false);
+            Q_EMIT currentTransactionChanged();
+        }
+        return m_sign_current_psbt_result;
+    }
     Q_INVOKABLE bool broadcastCurrentTransaction()
     {
         ++m_broadcast_current_transaction_calls;
@@ -1084,6 +1149,7 @@ public:
         ++m_discard_current_transaction_calls;
         m_current_transaction_can_send = false;
         m_current_transaction_can_broadcast = false;
+        m_current_transaction_can_sign = false;
         m_current_transaction_review_message.clear();
         if (m_recipients) {
             QMetaObject::invokeMethod(m_recipients, "clearToFront");
@@ -1140,6 +1206,27 @@ public:
         Q_EMIT backupWalletCallsChanged();
         Q_EMIT walletInfoChanged();
     }
+    Q_INVOKABLE void resetPsbtSigningTestState()
+    {
+        m_current_transaction_can_send = true;
+        m_current_transaction_can_broadcast = false;
+        m_current_transaction_can_sign = false;
+        m_current_psbt_output_count = 0;
+        m_current_transaction_review_message.clear();
+        m_has_external_signer = false;
+        m_key_scheme_kind = KeyScheme::SingleKey;
+        m_sign_current_psbt_result = true;
+        m_sign_current_psbt_needs_unlock = false;
+        m_sign_current_psbt_enables_broadcast = false;
+        m_sign_current_psbt_calls = 0;
+        m_sign_current_psbt_with_passphrase_calls = 0;
+        m_last_sign_current_psbt_passphrase.clear();
+        setTransactionStatus({}, false);
+        Q_EMIT signCurrentPsbtResultChanged();
+        Q_EMIT signCurrentPsbtCallsChanged();
+        Q_EMIT currentTransactionChanged();
+        Q_EMIT walletInfoChanged();
+    }
     Q_INVOKABLE void setExternalSignerWalletSettingsTestState()
     {
         m_key_scheme = QStringLiteral("Watch-only");
@@ -1193,6 +1280,8 @@ Q_SIGNALS:
     void prepareTransactionCallsChanged();
     void scheduleFeeEstimatesCallsChanged();
     void sendTransactionCallsChanged();
+    void signCurrentPsbtResultChanged();
+    void signCurrentPsbtCallsChanged();
     void broadcastCurrentTransactionCallsChanged();
     void discardCurrentTransactionCallsChanged();
     void currentTransactionChanged();
@@ -1232,6 +1321,9 @@ private:
     bool m_fee_estimate_pending{false};
     bool m_send_amount_exhausts_balance{false};
     bool m_send_transaction_result{true};
+    bool m_sign_current_psbt_result{true};
+    bool m_sign_current_psbt_needs_unlock{false};
+    bool m_sign_current_psbt_enables_broadcast{false};
     bool m_is_encrypted{false};
     bool m_is_locked{false};
     QString m_key_scheme{QStringLiteral("Descriptor")};
@@ -1247,6 +1339,9 @@ private:
     int m_prepare_transaction_calls{0};
     int m_schedule_fee_estimates_calls{0};
     int m_send_transaction_calls{0};
+    int m_sign_current_psbt_calls{0};
+    int m_sign_current_psbt_with_passphrase_calls{0};
+    QString m_last_sign_current_psbt_passphrase;
     int m_broadcast_current_transaction_calls{0};
     int m_discard_current_transaction_calls{0};
     MockAddressListModel m_address_list_model;

@@ -17,6 +17,8 @@ Item {
     property string reviewState: "initial"
     property string errorMessage: ""
     property bool canSend: true
+    property bool canApprove: canSend
+    property bool signOnly: false
 
     readonly property string statusText: {
         if (reviewState === "partiallySigned") {
@@ -24,11 +26,17 @@ Item {
                 ? root.wallet.currentTransactionReviewMessage
                 : qsTr("Signed on external signer. More signatures are required.")
         }
-        if (!canSend) return ""
-        if (reviewState === "signed") return qsTr("Signed on external signer. Ready to send.")
+        if (!canApprove && reviewState !== "signed") return ""
+        if (reviewState === "signed") {
+            return root.signOnly
+                ? qsTr("Signed on external signer. Ready to broadcast.")
+                : qsTr("Signed on external signer. Ready to send.")
+        }
         if (reviewState === "waiting") return qsTr("Waiting for approval on external signer.")
         if (reviewState === "error") return errorMessage
-        return qsTr("Approve on external signer to broadcast this transaction.")
+        return root.signOnly
+            ? qsTr("Approve on external signer to sign this transaction.")
+            : qsTr("Approve on external signer to broadcast this transaction.")
     }
     readonly property color statusColor: {
         if (reviewState === "signed") return Theme.color.green
@@ -36,7 +44,7 @@ Item {
         return Theme.color.neutral7
     }
     readonly property string buttonText: {
-        if (reviewState === "signed") return qsTr("Send")
+        if (reviewState === "signed") return root.signOnly ? qsTr("Ready to broadcast") : qsTr("Send")
         if (reviewState === "partiallySigned") return qsTr("More signatures required")
         if (reviewState === "waiting") return qsTr("Waiting for approval...")
         if (reviewState === "error") return qsTr("Retry external signer")
@@ -123,9 +131,9 @@ Item {
             objectName: root.buttonObjectName
             Layout.fillWidth: true
             text: root.buttonText
-            enabled: root.canSend && root.reviewState !== "waiting" && root.reviewState !== "partiallySigned"
+            enabled: root.canApprove && root.reviewState !== "waiting" && root.reviewState !== "partiallySigned"
             onClicked: {
-                if (root.reviewState === "signed") {
+                if (root.reviewState === "signed" && !root.signOnly) {
                     root.sendRequested()
                 } else {
                     root.beginApproval()

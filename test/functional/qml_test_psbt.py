@@ -2,7 +2,7 @@
 # Copyright (c) 2026 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""End-to-end GUI tests for PSBT import routing into send review pages."""
+"""End-to-end GUI tests for PSBT import routing into imported review pages."""
 
 import argparse
 import base64
@@ -128,6 +128,16 @@ def import_psbt(gui, psbt_path):
     gui.click("sendImportPsbtFromFileButton")
 
 
+def wait_for_imported_psbt_review(gui, expected_outputs):
+    gui.wait_for_property("reviewOnlyPsbtPopup", "visible", True, timeout_ms=20000)
+    gui.wait_for_page("sendReviewPage", timeout_ms=10000)
+    gui.wait_for_property("psbtOutputsSummary", "visible", True, timeout_ms=10000)
+    gui.wait_for_property("psbtReviewOutputsList", "count", expected_outputs, timeout_ms=10000)
+    gui.wait_for_property("sendReviewDoneButton", "visible", True, timeout_ms=10000)
+    assert gui.get_property("sendReviewBackButton", "visible") is False
+    assert gui.get_property("sendReviewSendButton", "visible") is False
+
+
 def build_fixtures(harness):
     recipient_wallet = "psbt-recipient"
     review_only_wallet = "psbt-review-only"
@@ -208,29 +218,30 @@ def run_test():
 
         import_psbt(gui, fixtures["single_review_path"])
         checkpoints.checkpoint("single-recipient PSBT submitted", gui)
-        gui.wait_for_page("sendReviewPage", timeout_ms=20000)
-        assert gui.get_current_page() == "sendReviewPage", "Expected single-recipient PSBT to open SendReview"
+        wait_for_imported_psbt_review(gui, expected_outputs=1)
+        assert gui.get_current_page() == "sendReviewPage", "Expected single-output PSBT to open imported review"
         checkpoints.checkpoint("single-recipient review displayed", gui)
-        gui.click("sendReviewBackButton")
+        gui.click("sendReviewDoneButton")
+        gui.wait_for_property("reviewOnlyPsbtPopup", "visible", False, timeout_ms=10000)
         gui.wait_for_property("sendOptionsButton", "visible", True, timeout_ms=10000)
         checkpoints.checkpoint("returned from single review to send page", gui)
 
         import_psbt(gui, fixtures["multiple_review_path"])
         checkpoints.checkpoint("multi-recipient PSBT submitted", gui)
-        gui.wait_for_page("sendReviewPage", timeout_ms=20000)
-        gui.wait_for_property("multipleRecipientsSummary", "visible", True, timeout_ms=10000)
+        wait_for_imported_psbt_review(gui, expected_outputs=2)
+        gui.wait_for_property("sendReviewRecipientCountText", "text", "There are 2 outputs.", timeout_ms=10000)
         assert gui.get_current_page() == "sendReviewPage", (
-            "Expected multi-recipient PSBT to open the review page"
+            "Expected multi-output PSBT to open the imported review page"
         )
         checkpoints.checkpoint("multiple-recipient review displayed", gui)
-        gui.click("sendReviewBackButton")
+        gui.click("sendReviewDoneButton")
+        gui.wait_for_property("reviewOnlyPsbtPopup", "visible", False, timeout_ms=10000)
         gui.wait_for_property("sendOptionsButton", "visible", True, timeout_ms=10000)
         checkpoints.checkpoint("returned from multiple review to send page", gui)
 
         import_psbt(gui, fixtures["review_only_path"])
         checkpoints.checkpoint("review-only PSBT submitted", gui)
-        gui.wait_for_property("reviewOnlyPsbtPopup", "visible", True, timeout_ms=20000)
-        gui.wait_for_page("sendReviewPage", timeout_ms=10000)
+        wait_for_imported_psbt_review(gui, expected_outputs=1)
         gui.wait_for_property("sendReviewCannotSignBanner", "visible", True, timeout_ms=10000)
         checkpoints.checkpoint("review-only SendReview modal displayed", gui)
         assert gui.get_property("sendReviewCannotSignBanner", "message") == (

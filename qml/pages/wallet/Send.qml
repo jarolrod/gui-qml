@@ -135,11 +135,10 @@ PageStack {
 
         function handlePsbtImportResult(result) {
             sendOptionsPopup.close()
-            if (result === WalletQmlModel.WalletCanSign) {
-                const multipleRecipientsEnabled = root.wallet.recipients.count > 1
-                sendOptionsPopup.multipleRecipientsEnabled = multipleRecipientsEnabled
-                root.transactionPrepared(multipleRecipientsEnabled)
-            } else if (result === WalletQmlModel.WalletCannotSign) {
+            if (result === WalletQmlModel.PsbtImportedForReview
+                    || result === WalletQmlModel.WalletCanSign
+                    || result === WalletQmlModel.WalletCanSignPsbt
+                    || result === WalletQmlModel.WalletCannotSign) {
                 reviewOnlyPsbtPopup.reviewWallet = root.wallet
                 reviewOnlyPsbtPopup.open()
             } else if (result === WalletQmlModel.TransactionAlreadyKnown) {

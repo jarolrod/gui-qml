@@ -41,6 +41,7 @@
         <file>components/TotalBytesIndicator.qml</file>
         <file>components/DetailEditRow.qml</file>
         <file>components/PaymentDetailOptionsPopup.qml</file>
+        <file>components/PsbtOutputsSummary.qml</file>
         <file>components/QRCodePopup.qml</file>
         <file>components/ReceiveOptionsPopup.qml</file>
         <file>components/Tooltip.qml</file>

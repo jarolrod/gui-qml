@@ -395,6 +395,37 @@ void CompleteReviewPsbt(PartiallySignedTransaction& psbt)
     psbt.inputs[0].final_script_sig = CScript{} << std::vector<unsigned char>{};
 }
 
+PartiallySignedTransaction MakeCompleteReviewPsbtWithOutputs(const std::vector<CTxOut>& outputs, CAmount input_amount)
+{
+    CMutableTransaction previous_tx;
+    previous_tx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), 0});
+    previous_tx.vout.emplace_back(input_amount, CScript{} << OP_DROP << OP_TRUE);
+    const CTransactionRef previous{MakeTransactionRef(previous_tx)};
+
+    CMutableTransaction tx;
+    tx.vin.emplace_back(COutPoint{previous->GetHash(), 0});
+    tx.vout = outputs;
+
+    PartiallySignedTransaction psbt{tx};
+    psbt.inputs[0].non_witness_utxo = previous;
+    CompleteReviewPsbt(psbt);
+    return psbt;
+}
+
+PartiallySignedTransaction MakeWitnessMultisigReviewPsbt(const CScript& witness_script,
+                                                         CAmount input_amount = 2'000,
+                                                         CAmount output_amount = 1'500)
+{
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), 0});
+    mtx.vout.emplace_back(output_amount, GetScriptForDestination(DecodeDestination(VALID_MAINNET_ADDRESS.toStdString())));
+
+    PartiallySignedTransaction psbt{mtx};
+    psbt.inputs[0].witness_utxo = CTxOut{input_amount, GetScriptForDestination(WitnessV0ScriptHash(witness_script))};
+    psbt.inputs[0].witness_script = witness_script;
+    return psbt;
+}
+
 QString WritePsbt(const PartiallySignedTransaction& psbt, const QTemporaryDir& temp_dir, const QString& name)
 {
     const QString path{temp_dir.filePath(name)};
@@ -462,11 +493,20 @@ private Q_SLOTS:
     void saveCurrentTransactionAsPsbt_preservesImportedMetadata();
     void saveReviewOnlyPsbt_preservesOriginalWithoutDerivationMetadata();
     void discardCurrentTransaction_clearsReviewState();
-    void sendImportedPsbtWithPassphraseSignsOnceAndRelocks();
+    void signImportedPsbtWithPassphraseSignsOnceAndRelocks();
     void externalSignerApprovalSignsImportedPsbtOnlyOnce();
     void externalSignerApprovalKeepsIncompleteSignedPsbt();
     void importPsbtFromFile_opensForeignUnsignedPsbtForReviewOnly();
+    void importPsbtFromFile_opensSignableMultisigPsbtForSigning();
+    void signCurrentPsbt_savesIncompleteMultisigSignature();
+    void signCurrentPsbt_enablesBroadcastWhenComplete();
+    void signCurrentPsbtWithPassphraseSignsAndRelocks();
     void importPsbtFromFile_broadcastsCompleteForeignMultisigPsbt();
+    void importPsbtFromFile_broadcastsCompletePsbtWithDataOutput();
+    void importPsbtFromFile_warnsForPositiveValueUnknownScriptOutput();
+    void importPsbtFromFile_broadcastsCompletePsbtWithMoreThanTwentyFiveOutputs();
+    void importPsbtFromFile_reviewsSendablePsbtWithOnlyWalletOwnedOutputs();
+    void saveCompleteBroadcastableImportedPsbt_preservesOriginalPsbt();
     void importPsbtFromFile_opensUnsignedMultisigPsbtForReviewOnly();
     void importPsbtFromFile_blocksBroadcastWhenFeeIsInvalid();
     void importPsbtFromFile_returnsTransactionAlreadyKnownWhenTxIsInWallet();
@@ -1868,7 +1908,7 @@ void WalletQmlModelTests::importPsbtFromFile_opensOwnedUnsignedPsbtWithoutSignin
 
     QVERIFY(!model->broadcastCurrentTransaction());
     QVERIFY(!model->transactionError().isEmpty());
-    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::WalletCanSign);
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
     QVERIFY(model->transactionError().isEmpty());
     QVERIFY(!wallet->fill_psbt_sign_args.empty());
     QVERIFY(std::none_of(wallet->fill_psbt_sign_args.begin(), wallet->fill_psbt_sign_args.end(), [](bool sign) {
@@ -1880,10 +1920,12 @@ void WalletQmlModelTests::importPsbtFromFile_opensOwnedUnsignedPsbtWithoutSignin
     QVERIFY(model->currentTransaction()->getWtx()->vin[0].scriptSig.empty());
     QVERIFY(model->currentTransaction()->getWtx()->vin[0].scriptWitness.IsNull());
     QCOMPARE(model->sendRecipientList()->count(), 1);
-    QCOMPARE(model->sendRecipientList()->currentRecipient()->address()->address(), VALID_MAINNET_ADDRESS);
-    QCOMPARE(model->sendRecipientList()->currentRecipient()->amount()->satoshi(), 1'500);
-    QVERIFY(model->currentTransactionCanSend());
+    QVERIFY(model->sendRecipientList()->currentRecipient()->address()->address().isEmpty());
+    QCOMPARE(model->sendRecipientList()->currentRecipient()->amount()->satoshi(), CAmount{0});
+    QCOMPARE(model->currentPsbtOutputCount(), 1);
+    QVERIFY(!model->currentTransactionCanSend());
     QVERIFY(!model->currentTransactionCanBroadcast());
+    QVERIFY(model->currentTransactionCanSign());
     QVERIFY(model->currentTransactionReviewMessage().isEmpty());
 }
 
@@ -1900,7 +1942,7 @@ void WalletQmlModelTests::importPsbtFromFile_opensForeignUnsignedPsbtForReviewOn
                                     bool& complete) {
         wallet->fill_psbt_sign_args.push_back(sign);
         if (n_signed) {
-            *n_signed = 1;
+            *n_signed = 0;
         }
         complete = false;
         return std::nullopt;
@@ -1921,7 +1963,7 @@ void WalletQmlModelTests::importPsbtFromFile_opensForeignUnsignedPsbtForReviewOn
     QCOMPARE(file.write(raw), raw.size());
     file.close();
 
-    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::WalletCannotSign);
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
     QVERIFY(!wallet->fill_psbt_sign_args.empty());
     QVERIFY(std::none_of(wallet->fill_psbt_sign_args.begin(), wallet->fill_psbt_sign_args.end(), [](bool sign) {
         return sign;
@@ -1929,8 +1971,9 @@ void WalletQmlModelTests::importPsbtFromFile_opensForeignUnsignedPsbtForReviewOn
     QVERIFY(model->currentTransaction() != nullptr);
     QVERIFY(model->currentTransaction()->getWtx() != nullptr);
     QCOMPARE(model->sendRecipientList()->count(), 1);
-    QCOMPARE(model->sendRecipientList()->currentRecipient()->address()->address(), VALID_MAINNET_ADDRESS);
-    QCOMPARE(model->sendRecipientList()->currentRecipient()->amount()->satoshi(), 1'500);
+    QVERIFY(model->sendRecipientList()->currentRecipient()->address()->address().isEmpty());
+    QCOMPARE(model->sendRecipientList()->currentRecipient()->amount()->satoshi(), CAmount{0});
+    QCOMPARE(model->currentPsbtOutputCount(), 1);
     QVERIFY(!model->currentTransactionCanSend());
     QVERIFY(!model->currentTransactionCanBroadcast());
     QCOMPARE(model->currentTransactionReviewMessage(), QString("This wallet does not have the keys to sign this transaction."));
@@ -1939,6 +1982,222 @@ void WalletQmlModelTests::importPsbtFromFile_opensForeignUnsignedPsbtForReviewOn
     QVERIFY(!model->sendTransaction());
     QCOMPARE(wallet->commit_calls, 0);
     QCOMPARE(model->transactionError(), QString("This wallet does not have the keys to sign this transaction."));
+}
+
+void WalletQmlModelTests::importPsbtFromFile_opensSignableMultisigPsbtForSigning()
+{
+    FakePasswordWallet* wallet{nullptr};
+    auto model = MakeWalletModel(wallet);
+
+    wallet->fill_psbt_fn = [wallet](std::optional<int>,
+                                    bool sign,
+                                    bool,
+                                    size_t* n_signed,
+                                    PartiallySignedTransaction&,
+                                    bool& complete) {
+        wallet->fill_psbt_sign_args.push_back(sign);
+        if (n_signed) {
+            *n_signed = 1;
+        }
+        complete = false;
+        return std::nullopt;
+    };
+
+    CKey key1;
+    CKey key2;
+    CKey key3;
+    key1.MakeNewKey(true);
+    key2.MakeNewKey(true);
+    key3.MakeNewKey(true);
+    const CScript witness_script{GetScriptForMultisig(2, {key1.GetPubKey(), key2.GetPubKey(), key3.GetPubKey()})};
+    const PartiallySignedTransaction psbt{MakeWitnessMultisigReviewPsbt(witness_script)};
+
+    QTemporaryDir temp_dir;
+    QVERIFY(temp_dir.isValid());
+    const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("signable-multisig.psbt"))};
+    QVERIFY(!path.isEmpty());
+
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
+    QVERIFY(model->currentTransaction() != nullptr);
+    QVERIFY(!model->currentTransactionCanSend());
+    QVERIFY(!model->currentTransactionCanBroadcast());
+    QVERIFY(model->currentTransactionCanSign());
+    QCOMPARE(model->currentTransactionReviewMessage(), QString("This transaction requires 2 of 3 signatures."));
+    QCOMPARE(wallet->commit_calls, 0);
+}
+
+void WalletQmlModelTests::signCurrentPsbt_savesIncompleteMultisigSignature()
+{
+    FakePasswordWallet* wallet{nullptr};
+    auto model = MakeWalletModel(wallet);
+    wallet->encrypted = false;
+    wallet->locked = false;
+
+    CKey key1;
+    CKey key2;
+    CKey key3;
+    key1.MakeNewKey(true);
+    key2.MakeNewKey(true);
+    key3.MakeNewKey(true);
+    const CScript witness_script{GetScriptForMultisig(2, {key1.GetPubKey(), key2.GetPubKey(), key3.GetPubKey()})};
+    auto provider{std::make_shared<FillableSigningProvider>()};
+    QVERIFY(provider->AddCScript(witness_script));
+    QVERIFY(provider->AddKey(key1));
+
+    wallet->fill_psbt_fn = [wallet, provider](std::optional<int>,
+                                              bool sign,
+                                              bool,
+                                              size_t* n_signed,
+                                              PartiallySignedTransaction& psbt,
+                                              bool& complete) {
+        wallet->fill_psbt_sign_args.push_back(sign);
+        if (n_signed) {
+            *n_signed = 1;
+        }
+        if (sign) {
+            const PrecomputedTransactionData txdata{PrecomputePSBTData(psbt)};
+            const auto sign_result{SignPSBTInput(*provider, psbt, 0, &txdata, std::nullopt, nullptr, /*finalize=*/false)};
+            if (sign_result != PSBTError::OK && sign_result != PSBTError::INCOMPLETE) {
+                return std::optional<common::PSBTError>{sign_result};
+            }
+        }
+        complete = FinalizePSBT(psbt);
+        return std::optional<common::PSBTError>{};
+    };
+
+    const PartiallySignedTransaction psbt{MakeWitnessMultisigReviewPsbt(witness_script)};
+    QTemporaryDir temp_dir;
+    QVERIFY(temp_dir.isValid());
+    const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("incomplete-signable-multisig.psbt"))};
+    QVERIFY(!path.isEmpty());
+
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
+    QVERIFY(model->signCurrentPsbt());
+    QVERIFY(!model->currentTransactionCanSign());
+    QVERIFY(!model->currentTransactionCanSend());
+    QVERIFY(!model->currentTransactionCanBroadcast());
+    QCOMPARE(model->currentTransactionReviewMessage(), QString("Signed transaction. More signatures are required."));
+    QCOMPARE(wallet->commit_calls, 0);
+
+    const QString saved_path{temp_dir.filePath(QStringLiteral("signed-incomplete-multisig.psbt"))};
+    QCOMPARE(model->saveCurrentTransactionAsPsbt(saved_path), QString{});
+
+    PartiallySignedTransaction saved;
+    QCOMPARE(PsbtQmlModel::LoadPsbtFromFile(saved_path, saved), QString{});
+    QCOMPARE(saved.inputs[0].partial_sigs.size(), size_t{1});
+    QVERIFY(saved.inputs[0].final_script_witness.IsNull());
+}
+
+void WalletQmlModelTests::signCurrentPsbt_enablesBroadcastWhenComplete()
+{
+    NiceMock<MockNode> node;
+    FakePasswordWallet* wallet{nullptr};
+    auto model = MakeWalletModel(wallet, &node);
+    wallet->encrypted = false;
+    wallet->locked = false;
+
+    CKey key;
+    key.MakeNewKey(true);
+    const CScript witness_script{GetScriptForMultisig(1, {key.GetPubKey()})};
+    auto provider{std::make_shared<FillableSigningProvider>()};
+    QVERIFY(provider->AddCScript(witness_script));
+    QVERIFY(provider->AddKey(key));
+
+    wallet->fill_psbt_fn = [wallet, provider](std::optional<int>,
+                                              bool sign,
+                                              bool,
+                                              size_t* n_signed,
+                                              PartiallySignedTransaction& psbt,
+                                              bool& complete) {
+        wallet->fill_psbt_sign_args.push_back(sign);
+        if (n_signed) {
+            *n_signed = 1;
+        }
+        if (sign) {
+            const PrecomputedTransactionData txdata{PrecomputePSBTData(psbt)};
+            const auto sign_result{SignPSBTInput(*provider, psbt, 0, &txdata, std::nullopt, nullptr, /*finalize=*/false)};
+            if (sign_result != PSBTError::OK && sign_result != PSBTError::INCOMPLETE) {
+                return std::optional<common::PSBTError>{sign_result};
+            }
+        }
+        complete = FinalizePSBT(psbt);
+        return std::optional<common::PSBTError>{};
+    };
+
+    const PartiallySignedTransaction psbt{MakeWitnessMultisigReviewPsbt(witness_script)};
+    QTemporaryDir temp_dir;
+    QVERIFY(temp_dir.isValid());
+    const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("complete-after-sign.psbt"))};
+    QVERIFY(!path.isEmpty());
+
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
+    QVERIFY(model->signCurrentPsbt());
+    QVERIFY(!model->currentTransactionCanSign());
+    QVERIFY(!model->currentTransactionCanSend());
+    QVERIFY(model->currentTransactionCanBroadcast());
+    QCOMPARE(wallet->commit_calls, 0);
+
+    EXPECT_CALL(node, broadcastTransaction(testing::_, testing::_, testing::_))
+        .WillOnce(Return(node::TransactionError::OK));
+    QVERIFY(model->broadcastCurrentTransaction());
+    QCOMPARE(wallet->commit_calls, 0);
+}
+
+void WalletQmlModelTests::signCurrentPsbtWithPassphraseSignsAndRelocks()
+{
+    FakePasswordWallet* wallet{nullptr};
+    auto model = MakeWalletModel(wallet);
+
+    CKey key;
+    key.MakeNewKey(true);
+    const CScript witness_script{GetScriptForMultisig(1, {key.GetPubKey()})};
+    auto provider{std::make_shared<FillableSigningProvider>()};
+    QVERIFY(provider->AddCScript(witness_script));
+    QVERIFY(provider->AddKey(key));
+
+    wallet->fill_psbt_fn = [wallet, provider](std::optional<int>,
+                                              bool sign,
+                                              bool,
+                                              size_t* n_signed,
+                                              PartiallySignedTransaction& psbt,
+                                              bool& complete) {
+        wallet->fill_psbt_sign_args.push_back(sign);
+        if (n_signed) {
+            *n_signed = 1;
+        }
+        if (sign) {
+            const PrecomputedTransactionData txdata{PrecomputePSBTData(psbt)};
+            const auto sign_result{SignPSBTInput(*provider, psbt, 0, &txdata, std::nullopt, nullptr, /*finalize=*/false)};
+            if (sign_result != PSBTError::OK && sign_result != PSBTError::INCOMPLETE) {
+                return std::optional<common::PSBTError>{sign_result};
+            }
+        }
+        complete = FinalizePSBT(psbt);
+        return std::optional<common::PSBTError>{};
+    };
+
+    const PartiallySignedTransaction psbt{MakeWitnessMultisigReviewPsbt(witness_script)};
+    QTemporaryDir temp_dir;
+    QVERIFY(temp_dir.isValid());
+    const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("locked-signable-multisig.psbt"))};
+    QVERIFY(!path.isEmpty());
+
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
+    QVERIFY(!model->signCurrentPsbt());
+    QVERIFY(model->transactionNeedsUnlock());
+    QCOMPARE(wallet->unlock_calls, 0);
+    QCOMPARE(std::count(wallet->fill_psbt_sign_args.begin(), wallet->fill_psbt_sign_args.end(), true), 0);
+
+    QVERIFY(model->signCurrentPsbtWithPassphrase(QStringLiteral("secret")));
+    QCOMPARE(wallet->unlock_calls, 1);
+    QCOMPARE(wallet->unlock_passphrases.size(), size_t{1});
+    QCOMPARE(wallet->unlock_passphrases.back(), std::string{"secret"});
+    QCOMPARE(wallet->lock_calls, 1);
+    QVERIFY(wallet->locked);
+    QVERIFY(model->currentTransactionCanBroadcast());
+    QVERIFY(!model->currentTransactionCanSend());
+    QCOMPARE(wallet->commit_calls, 0);
+    QCOMPARE(std::count(wallet->fill_psbt_sign_args.begin(), wallet->fill_psbt_sign_args.end(), true), 1);
 }
 
 void WalletQmlModelTests::saveReviewOnlyPsbt_preservesOriginalWithoutDerivationMetadata()
@@ -1962,7 +2221,7 @@ void WalletQmlModelTests::saveReviewOnlyPsbt_preservesOriginalWithoutDerivationM
             psbtx.unknown[{0x53}] = {0x04};
         }
         if (n_signed) {
-            *n_signed = 1;
+            *n_signed = 0;
         }
         complete = false;
         return std::nullopt;
@@ -1973,7 +2232,7 @@ void WalletQmlModelTests::saveReviewOnlyPsbt_preservesOriginalWithoutDerivationM
     const QString source_path{WritePsbt(psbt, temp_dir, QStringLiteral("review-only-source.psbt"))};
     QVERIFY(!source_path.isEmpty());
 
-    QCOMPARE(model->importPsbtFromFile(source_path), WalletQmlModel::PsbtImportResult::WalletCannotSign);
+    QCOMPARE(model->importPsbtFromFile(source_path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
     QCOMPARE(bip32_derivation_requests, std::vector<bool>({false}));
 
     const QString saved_path{temp_dir.filePath(QStringLiteral("review-only-saved.psbt"))};
@@ -2008,7 +2267,7 @@ void WalletQmlModelTests::discardCurrentTransaction_clearsReviewState()
     QVERIFY(temp_dir.isValid());
     const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("discard-review.psbt"))};
     QVERIFY(!path.isEmpty());
-    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::WalletCannotSign);
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
     QVERIFY(!model->sendTransaction());
     QVERIFY(!model->transactionError().isEmpty());
 
@@ -2055,7 +2314,7 @@ void WalletQmlModelTests::importPsbtFromFile_opensWatchOnlyUnsignedPsbtForReview
     const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("watch-only.psbt"))};
     QVERIFY(!path.isEmpty());
 
-    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::WalletCannotSign);
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
     QVERIFY(model->currentTransaction() != nullptr);
     QVERIFY(!model->currentTransactionCanSend());
     QCOMPARE(model->currentTransactionReviewMessage(), QString("This wallet does not have the keys to sign this transaction."));
@@ -2092,7 +2351,7 @@ void WalletQmlModelTests::saveCurrentTransactionAsPsbt_preservesImportedMetadata
     QVERIFY(temp_dir.isValid());
     const QString source_path{WritePsbt(psbt, temp_dir, QStringLiteral("source.psbt"))};
     QVERIFY(!source_path.isEmpty());
-    QCOMPARE(model->importPsbtFromFile(source_path), WalletQmlModel::PsbtImportResult::WalletCanSign);
+    QCOMPARE(model->importPsbtFromFile(source_path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
 
     const QString saved_path{temp_dir.filePath(QStringLiteral("saved.psbt"))};
     QCOMPARE(model->saveCurrentTransactionAsPsbt(saved_path), QString{});
@@ -2114,7 +2373,7 @@ void WalletQmlModelTests::saveCurrentTransactionAsPsbt_preservesImportedMetadata
     QCOMPARE(saved.outputs[0].unknown, psbt.outputs[0].unknown);
 }
 
-void WalletQmlModelTests::sendImportedPsbtWithPassphraseSignsOnceAndRelocks()
+void WalletQmlModelTests::signImportedPsbtWithPassphraseSignsOnceAndRelocks()
 {
     FakePasswordWallet* wallet{nullptr};
     auto model = MakeWalletModel(wallet);
@@ -2145,18 +2404,20 @@ void WalletQmlModelTests::sendImportedPsbtWithPassphraseSignsOnceAndRelocks()
     QVERIFY(temp_dir.isValid());
     const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("locked.psbt"))};
     QVERIFY(!path.isEmpty());
-    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::WalletCanSign);
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
 
-    QVERIFY(!model->sendTransaction());
+    QVERIFY(!model->signCurrentPsbt());
     QVERIFY(model->transactionNeedsUnlock());
     QCOMPARE(wallet->unlock_calls, 0);
     QCOMPARE(std::count(wallet->fill_psbt_sign_args.begin(), wallet->fill_psbt_sign_args.end(), true), 0);
 
-    QVERIFY(model->sendTransactionWithPassphrase(QStringLiteral("secret")));
+    QVERIFY(model->signCurrentPsbtWithPassphrase(QStringLiteral("secret")));
     QCOMPARE(wallet->unlock_calls, 1);
     QCOMPARE(wallet->lock_calls, 1);
     QVERIFY(wallet->locked);
-    QCOMPARE(wallet->commit_calls, 1);
+    QCOMPARE(wallet->commit_calls, 0);
+    QVERIFY(model->currentTransactionCanBroadcast());
+    QVERIFY(!model->currentTransactionCanSend());
     QCOMPARE(std::count(wallet->fill_psbt_sign_args.begin(), wallet->fill_psbt_sign_args.end(), true), 1);
 }
 
@@ -2193,15 +2454,17 @@ void WalletQmlModelTests::externalSignerApprovalSignsImportedPsbtOnlyOnce()
     QVERIFY(temp_dir.isValid());
     const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("external.psbt"))};
     QVERIFY(!path.isEmpty());
-    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::WalletCanSign);
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
 
     QSignalSpy succeeded_spy{model.get(), &WalletQmlModel::externalSignerApprovalSucceeded};
     model->approveExternalSignerTransaction();
     QCOMPARE(succeeded_spy.count(), 1);
     QCOMPARE(std::count(wallet->fill_psbt_sign_args.begin(), wallet->fill_psbt_sign_args.end(), true), 1);
 
-    QVERIFY(model->sendTransaction());
-    QCOMPARE(wallet->commit_calls, 1);
+    QVERIFY(model->currentTransactionCanBroadcast());
+    QVERIFY(!model->currentTransactionCanSend());
+    QVERIFY(!model->sendTransaction());
+    QCOMPARE(wallet->commit_calls, 0);
     QCOMPARE(std::count(wallet->fill_psbt_sign_args.begin(), wallet->fill_psbt_sign_args.end(), true), 1);
 }
 
@@ -2241,7 +2504,7 @@ void WalletQmlModelTests::externalSignerApprovalKeepsIncompleteSignedPsbt()
     QVERIFY(temp_dir.isValid());
     const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("incomplete-external.psbt"))};
     QVERIFY(!path.isEmpty());
-    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::WalletCanSign);
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
 
     QSignalSpy succeeded_spy{model.get(), &WalletQmlModel::externalSignerApprovalSucceeded};
     QSignalSpy partially_succeeded_spy{model.get(), &WalletQmlModel::externalSignerApprovalPartiallySucceeded};
@@ -2316,7 +2579,7 @@ void WalletQmlModelTests::importPsbtFromFile_broadcastsCompleteForeignMultisigPs
     QCOMPARE(file.write(raw), raw.size());
     file.close();
 
-    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::WalletCannotSign);
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
     QVERIFY(!model->currentTransactionCanSend());
     QVERIFY(model->currentTransactionCanBroadcast());
     QVERIFY(model->currentTransactionReviewMessage().isEmpty());
@@ -2328,6 +2591,234 @@ void WalletQmlModelTests::importPsbtFromFile_broadcastsCompleteForeignMultisigPs
     QCOMPARE(wallet->commit_calls, 0);
     QVERIFY(!model->currentTransactionCanBroadcast());
     QVERIFY(model->transactionError().isEmpty());
+}
+
+void WalletQmlModelTests::importPsbtFromFile_broadcastsCompletePsbtWithDataOutput()
+{
+    NiceMock<MockNode> node;
+    FakePasswordWallet* wallet{nullptr};
+    auto model = MakeWalletModel(wallet, &node);
+
+    const CScript address_script{GetScriptForDestination(DecodeDestination(VALID_MAINNET_ADDRESS.toStdString()))};
+    const CScript data_script{CScript{} << OP_RETURN << std::vector<unsigned char>{0x01, 0x02, 0x03}};
+    const PartiallySignedTransaction psbt{MakeCompleteReviewPsbtWithOutputs({
+        CTxOut{1'500, address_script},
+        CTxOut{0, data_script},
+    }, 2'000)};
+
+    QTemporaryDir temp_dir;
+    QVERIFY(temp_dir.isValid());
+    const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("complete-with-data-output.psbt"))};
+    QVERIFY(!path.isEmpty());
+
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
+    QVERIFY(!model->currentTransactionCanSend());
+    QVERIFY(model->currentTransactionCanBroadcast());
+    QVERIFY(!model->currentTransactionReviewMessage().contains(QStringLiteral("positive-value outputs")));
+    QCOMPARE(model->currentPsbtOutputCount(), 2);
+
+    const int output_type_role{model->currentPsbtOutputs()->roleNames().key(QByteArray{"outputType"}, -1)};
+    QVERIFY(output_type_role != -1);
+    QCOMPARE(model->currentPsbtOutputs()->data(model->currentPsbtOutputs()->index(1, 0), output_type_role).toString(), QString("Data"));
+
+    EXPECT_CALL(node, broadcastTransaction(testing::_, testing::_, testing::_))
+        .WillOnce(Return(node::TransactionError::OK));
+    QVERIFY(model->broadcastCurrentTransaction());
+    QCOMPARE(wallet->commit_calls, 0);
+}
+
+void WalletQmlModelTests::importPsbtFromFile_warnsForPositiveValueUnknownScriptOutput()
+{
+    NiceMock<MockNode> node;
+    FakePasswordWallet* wallet{nullptr};
+    auto model = MakeWalletModel(wallet, &node);
+
+    const CScript address_script{GetScriptForDestination(DecodeDestination(VALID_MAINNET_ADDRESS.toStdString()))};
+    const CScript unknown_script{CScript{} << OP_TRUE};
+    const PartiallySignedTransaction psbt{MakeCompleteReviewPsbtWithOutputs({
+        CTxOut{1'500, address_script},
+        CTxOut{1'000, unknown_script},
+    }, 4'000)};
+
+    QTemporaryDir temp_dir;
+    QVERIFY(temp_dir.isValid());
+    const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("complete-with-unknown-script-output.psbt"))};
+    QVERIFY(!path.isEmpty());
+
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
+    QVERIFY(!model->currentTransactionCanSend());
+    QVERIFY(model->currentTransactionCanBroadcast());
+    QCOMPARE(model->currentPsbtOutputCount(), 2);
+
+    const int output_type_role{model->currentPsbtOutputs()->roleNames().key(QByteArray{"outputType"}, -1)};
+    const int primary_text_role{model->currentPsbtOutputs()->roleNames().key(QByteArray{"primaryText"}, -1)};
+    QVERIFY(output_type_role != -1);
+    QVERIFY(primary_text_role != -1);
+    QCOMPARE(model->currentPsbtOutputs()->data(model->currentPsbtOutputs()->index(1, 0), output_type_role).toString(), QString("Unknown"));
+    QCOMPARE(model->currentPsbtOutputs()->data(model->currentPsbtOutputs()->index(1, 0), primary_text_role).toString(), QString("Unknown output script"));
+
+    const QString warning{QStringLiteral("This transaction has one or more positive-value outputs that cannot be shown as a Bitcoin address. Review the script details before signing or broadcasting.")};
+    QVERIFY(model->currentTransactionReviewMessage().contains(warning));
+
+    EXPECT_CALL(node, broadcastTransaction(testing::_, testing::_, testing::_))
+        .WillOnce(Return(node::TransactionError::OK));
+    QVERIFY(model->broadcastCurrentTransaction());
+    QCOMPARE(wallet->commit_calls, 0);
+}
+
+void WalletQmlModelTests::importPsbtFromFile_broadcastsCompletePsbtWithMoreThanTwentyFiveOutputs()
+{
+    NiceMock<MockNode> node;
+    FakePasswordWallet* wallet{nullptr};
+    auto model = MakeWalletModel(wallet, &node);
+
+    std::vector<CTxOut> outputs;
+    for (int i{0}; i < 26; ++i) {
+        outputs.emplace_back(1'000, GetScriptForDestination(DecodeDestination(VALID_MAINNET_ADDRESS.toStdString())));
+    }
+    const PartiallySignedTransaction psbt{MakeCompleteReviewPsbtWithOutputs(outputs, 30'000)};
+
+    QTemporaryDir temp_dir;
+    QVERIFY(temp_dir.isValid());
+    const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("complete-many-outputs.psbt"))};
+    QVERIFY(!path.isEmpty());
+
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
+    QVERIFY(!model->currentTransactionCanSend());
+    QVERIFY(model->currentTransactionCanBroadcast());
+    QCOMPARE(model->currentPsbtOutputCount(), 26);
+
+    EXPECT_CALL(node, broadcastTransaction(testing::_, testing::_, testing::_))
+        .WillOnce(Return(node::TransactionError::OK));
+    QVERIFY(model->broadcastCurrentTransaction());
+    QCOMPARE(wallet->commit_calls, 0);
+}
+
+void WalletQmlModelTests::importPsbtFromFile_reviewsSendablePsbtWithOnlyWalletOwnedOutputs()
+{
+    FakePasswordWallet* wallet{nullptr};
+    auto model = MakeWalletModel(wallet);
+
+    wallet->txout_is_mine_fn = [](const CTxOut&) {
+        return wallet::ISMINE_SPENDABLE;
+    };
+    wallet->fill_psbt_fn = [wallet](std::optional<int>,
+                                    bool sign,
+                                    bool,
+                                    size_t* n_signed,
+                                    PartiallySignedTransaction&,
+                                    bool& complete) {
+        wallet->fill_psbt_sign_args.push_back(sign);
+        if (n_signed) {
+            *n_signed = 1;
+        }
+        complete = true;
+        return std::nullopt;
+    };
+
+    CMutableTransaction previous_tx;
+    previous_tx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), 0});
+    previous_tx.vout.emplace_back(2'000, CScript{} << OP_DROP << OP_TRUE);
+    const CTransactionRef previous{MakeTransactionRef(previous_tx)};
+    const COutPoint owned_outpoint{previous->GetHash(), 0};
+    wallet->txin_is_mine_fn = [owned_outpoint](const CTxIn& txin) {
+        return txin.prevout == owned_outpoint ? wallet::ISMINE_SPENDABLE : wallet::ISMINE_NO;
+    };
+
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(owned_outpoint);
+    mtx.vout.emplace_back(1'500, GetScriptForDestination(DecodeDestination(VALID_MAINNET_ADDRESS.toStdString())));
+
+    PartiallySignedTransaction psbt{mtx};
+    psbt.inputs[0].non_witness_utxo = previous;
+    CompleteReviewPsbt(psbt);
+
+    QTemporaryDir temp_dir;
+    QVERIFY(temp_dir.isValid());
+    const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("complete-wallet-owned-outputs.psbt"))};
+    QVERIFY(!path.isEmpty());
+
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
+    QVERIFY(model->currentTransaction() != nullptr);
+    QVERIFY(!model->currentTransactionCanSend());
+    QVERIFY(model->currentTransactionCanBroadcast());
+    QCOMPARE(model->currentPsbtOutputCount(), 1);
+    QCOMPARE(model->currentTransactionReviewMessage(), QString{});
+}
+
+void WalletQmlModelTests::saveCompleteBroadcastableImportedPsbt_preservesOriginalPsbt()
+{
+    NiceMock<MockNode> node;
+    FakePasswordWallet* wallet{nullptr};
+    auto model = MakeWalletModel(wallet, &node);
+
+    wallet->fill_psbt_fn = [wallet](std::optional<int>,
+                                    bool sign,
+                                    bool,
+                                    size_t* n_signed,
+                                    PartiallySignedTransaction&,
+                                    bool& complete) {
+        wallet->fill_psbt_sign_args.push_back(sign);
+        if (n_signed) {
+            *n_signed = 0;
+        }
+        complete = false;
+        return std::nullopt;
+    };
+
+    CKey key1;
+    CKey key2;
+    key1.MakeNewKey(true);
+    key2.MakeNewKey(true);
+    const CScript witness_script{GetScriptForMultisig(2, {key1.GetPubKey(), key2.GetPubKey()})};
+
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), 0});
+    mtx.vout.emplace_back(1'500, GetScriptForDestination(DecodeDestination(VALID_MAINNET_ADDRESS.toStdString())));
+
+    PartiallySignedTransaction psbt{mtx};
+    psbt.inputs[0].witness_utxo = CTxOut{2'000, GetScriptForDestination(WitnessV0ScriptHash(witness_script))};
+    psbt.inputs[0].witness_script = witness_script;
+
+    FillableSigningProvider provider;
+    QVERIFY(provider.AddCScript(witness_script));
+    QVERIFY(provider.AddKey(key1));
+    QVERIFY(provider.AddKey(key2));
+
+    const PrecomputedTransactionData txdata{PrecomputePSBTData(psbt)};
+    QCOMPARE(
+        SignPSBTInput(provider, psbt, 0, &txdata, std::nullopt, nullptr, /*finalize=*/false),
+        PSBTError::OK);
+
+    QVERIFY(!psbt.inputs[0].partial_sigs.empty());
+    QVERIFY(!psbt.inputs[0].witness_script.empty());
+    QVERIFY(psbt.inputs[0].final_script_witness.IsNull());
+
+    PartiallySignedTransaction finalized_copy{psbt};
+    QVERIFY(FinalizePSBT(finalized_copy));
+    QVERIFY(finalized_copy.inputs[0].partial_sigs.empty());
+    QVERIFY(finalized_copy.inputs[0].witness_script.empty());
+    QVERIFY(!finalized_copy.inputs[0].final_script_witness.IsNull());
+
+    QTemporaryDir temp_dir;
+    QVERIFY(temp_dir.isValid());
+    const QString source_path{WritePsbt(psbt, temp_dir, QStringLiteral("complete-unfinalized.psbt"))};
+    QVERIFY(!source_path.isEmpty());
+
+    QCOMPARE(model->importPsbtFromFile(source_path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
+    QVERIFY(!model->currentTransactionCanSend());
+    QVERIFY(model->currentTransactionCanBroadcast());
+
+    const QString saved_path{temp_dir.filePath(QStringLiteral("saved.psbt"))};
+    QCOMPARE(model->saveCurrentTransactionAsPsbt(saved_path), QString{});
+
+    PartiallySignedTransaction saved;
+    QCOMPARE(PsbtQmlModel::LoadPsbtFromFile(saved_path, saved), QString{});
+
+    QCOMPARE(saved.inputs[0].partial_sigs.size(), psbt.inputs[0].partial_sigs.size());
+    QVERIFY(saved.inputs[0].witness_script == psbt.inputs[0].witness_script);
+    QVERIFY(saved.inputs[0].final_script_witness.IsNull());
+    QCOMPARE(PsbtQmlModel::SerializePsbtRaw(saved), PsbtQmlModel::SerializePsbtRaw(psbt));
 }
 
 void WalletQmlModelTests::importPsbtFromFile_opensUnsignedMultisigPsbtForReviewOnly()
@@ -2369,7 +2860,7 @@ void WalletQmlModelTests::importPsbtFromFile_opensUnsignedMultisigPsbtForReviewO
     const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("unsigned-multisig.psbt"))};
     QVERIFY(!path.isEmpty());
 
-    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::WalletCannotSign);
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
     QVERIFY(model->currentTransaction() != nullptr);
     QVERIFY(!model->currentTransactionCanSend());
     QVERIFY(!model->currentTransactionCanBroadcast());
@@ -2408,7 +2899,7 @@ void WalletQmlModelTests::importPsbtFromFile_blocksBroadcastWhenFeeIsInvalid()
     const QString path{WritePsbt(psbt, temp_dir, QStringLiteral("complete-with-invalid-fee.psbt"))};
     QVERIFY(!path.isEmpty());
 
-    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::WalletCannotSign);
+    QCOMPARE(model->importPsbtFromFile(path), WalletQmlModel::PsbtImportResult::PsbtImportedForReview);
     QVERIFY(!model->currentTransactionCanSend());
     QVERIFY(!model->currentTransactionCanBroadcast());
     QCOMPARE(

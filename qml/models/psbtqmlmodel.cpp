@@ -274,8 +274,9 @@ void PsbtQmlModel::broadcast()
         return;
     }
 
+    PartiallySignedTransaction psbt{*m_psbt};
     CMutableTransaction mutable_tx;
-    if (!FinalizeAndExtractPSBT(*m_psbt, mutable_tx)) {
+    if (!FinalizeAndExtractPSBT(psbt, mutable_tx)) {
         refreshState(tr("PSBT is not complete and cannot be broadcast."));
         return;
     }
@@ -324,20 +325,23 @@ void PsbtQmlModel::refreshState(const QString& status_override)
     if (!m_psbt) {
         return;
     }
-    bool complete{FinalizePSBT(*m_psbt)};
+    PartiallySignedTransaction analysis_psbt{*m_psbt};
+    bool complete{FinalizePSBT(analysis_psbt)};
     size_t could_sign{0};
     std::optional<common::PSBTError> fill_error;
     if (m_wallet) {
-        fill_error = m_wallet->fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/true, &could_sign, *m_psbt, complete);
+        fill_error = m_wallet->fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/true, &could_sign, analysis_psbt, complete);
     }
+    PartiallySignedTransaction finalized_psbt{analysis_psbt};
+    complete = FinalizePSBT(finalized_psbt);
 
     m_error = fill_error ? PsbtErrorText(*fill_error) : QString();
     m_complete = complete;
     m_can_broadcast = complete;
     m_could_sign_inputs = static_cast<int>(could_sign);
-    m_unsigned_inputs = static_cast<int>(CountPSBTUnsignedInputs(*m_psbt));
+    m_unsigned_inputs = static_cast<int>(CountPSBTUnsignedInputs(finalized_psbt));
     m_can_sign = !complete && m_wallet && !m_wallet->privateKeysDisabled() && could_sign > 0;
-    m_summary = buildSummary(*m_psbt);
+    m_summary = buildSummary(finalized_psbt);
 
     if (!status_override.isEmpty()) {
         m_status = status_override;
